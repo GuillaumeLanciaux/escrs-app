@@ -39,13 +39,15 @@ function createMainWindow(): void {
 
 async function _savePDF(win: BrowserWindow): Promise<void> {
   const parentWin = win.isDestroyed() ? (mainWindow ?? undefined) : win;
-  const { canceled, filePath } = await dialog.showSaveDialog(parentWin!, {
+
+  // ✅ CORRECTION : ne pas destructurer directement, utiliser result
+  const result = await dialog.showSaveDialog(parentWin!, {
     title:       'Enregistrer les résultats ESCRS',
     defaultPath: `ESCRS_${new Date().toISOString().slice(0, 10)}.pdf`,
     filters:     [{ name: 'PDF', extensions: ['pdf'] }],
   });
 
-  if (canceled || !filePath) return;
+  if (result.canceled || !result.filePath) return;
 
   try {
     const data = await win.webContents.printToPDF({
@@ -57,8 +59,8 @@ async function _savePDF(win: BrowserWindow): Promise<void> {
       },
     });
 
-    fs.writeFileSync(filePath, data);
-    console.log(`  ✓ PDF enregistré : ${filePath}`);
+    fs.writeFileSync(result.filePath, data);
+    console.log(`  ✓ PDF enregistré : ${result.filePath}`);
   } catch (err) {
     console.error('Erreur export PDF :', err);
     dialog.showErrorBox('Erreur', `Impossible d'enregistrer le PDF :\n${err}`);
@@ -141,7 +143,6 @@ function runPythonArgs(args: string[]): Promise<unknown> {
         reject(new Error(`Python error (code ${code}):\n${stderr}`));
         return;
       }
-      // Trouver le premier '{' pour ignorer les éventuels logs avant le JSON
       const jsonStart = stdout.indexOf('{');
       if (jsonStart === -1) {
         reject(new Error(`Aucun JSON trouvé dans stdout:\n${stdout}`));
@@ -221,7 +222,6 @@ ipcMain.handle('calculer-escrs', async (_event, params: Record<string, unknown>)
   try {
     const result = await runPython(params);
 
-    // ── Créer et charger la page une seule fois ────────────────────────────
     if (!escrsWindow || escrsWindow.isDestroyed()) {
       escrsWindow = createEscrsWindow();
       await escrsWindow.loadURL(ESCRS_URL);
@@ -241,7 +241,6 @@ ipcMain.handle('calculer-escrs', async (_event, params: Record<string, unknown>)
         })
       `);
     } else {
-      // Fenêtre déjà ouverte — juste la mettre au premier plan
       await escrsWindow.webContents.executeJavaScript(`
         (function() {
           const btns = Array.from(document.querySelectorAll('button'));
