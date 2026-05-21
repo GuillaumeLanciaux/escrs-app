@@ -1,0 +1,11 @@
+# Ignore node modules
+node_modules/
+# ignore cache Python
+__pycache__/
+
+# Ignore tesseract data and folders
+tesseract/
+
+# Optional OS/IDE files
+.DS_Store
+Thumbs.db

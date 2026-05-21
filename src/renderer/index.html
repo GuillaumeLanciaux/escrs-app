@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculateur IOL ESCRS</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f5f6fa;
+      color: #2d3748;
+      padding: 24px;
+    }
+
+    h1 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      color: #1a202c;
+    }
+
+    .section {
+      background: white;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin-bottom: 16px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .section-title {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #718096;
+      margin-bottom: 12px;
+    }
+
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+    .full  { grid-column: 1 / -1; }
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 13px;
+      color: #4a5568;
+    }
+
+    input, select {
+      padding: 7px 10px;
+      border: 1px solid #cbd5e0;
+      border-radius: 6px;
+      font-size: 14px;
+      background: white;
+      color: #2d3748;
+      transition: border-color 0.15s;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: #4299e1;
+      box-shadow: 0 0 0 3px rgba(66,153,225,0.15);
+    }
+
+    /* Mode tabs */
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .tab {
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: 1px solid #cbd5e0;
+      background: white;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .tab.active {
+      background: #4299e1;
+      color: white;
+      border-color: #4299e1;
+    }
+
+    /* Sections conditionnelles */
+    .toric-only, .lasik-only { display: none; }
+    body.mode-toric   .toric-only { display: contents; }
+    body.mode-postlasik .lasik-only { display: contents; }
+
+    /* Bouton principal */
+    #btn-calculer {
+      width: 100%;
+      padding: 12px;
+      background: #4299e1;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+      margin-top: 4px;
+    }
+
+    #btn-calculer:hover    { background: #3182ce; }
+    #btn-calculer:disabled { background: #a0aec0; cursor: not-allowed; }
+
+    /* Status */
+    #status {
+      margin-top: 12px;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      display: none;
+    }
+
+    #status.info    { background: #ebf8ff; color: #2b6cb0; border: 1px solid #bee3f8; display: block; }
+    #status.success { background: #f0fff4; color: #276749; border: 1px solid #9ae6b4; display: block; }
+    #status.error   { background: #fff5f5; color: #c53030; border: 1px solid #feb2b2; display: block; }
+  </style>
+</head>
+<body class="mode-normal">
+
+  <h1> Calculateur IOL ESCRS</h1>
+
+  <!-- Mode -->
+  <div class="section">
+    <div class="section-title">Mode de calcul</div>
+    <div class="tabs">
+      <button class="tab active" data-mode="normal">Standard</button>
+      <button class="tab"        data-mode="toric">Torique</button>
+      <button class="tab"        data-mode="postlasik">Post LASIK/PRK</button>
+    </div>
+
+    <!-- Post LASIK type -->
+    <div class="lasik-only">
+      <label>
+        Type d'intervention
+        <select id="postLasikType">
+          <option value="Myopic">Myopique</option>
+          <option value="Hyperopic">Hypermétropique</option>
+        </select>
+      </label>
+    </div>
+  </div>
+
+  <!-- Patient -->
+  <div class="section">
+    <div class="section-title">Patient</div>
+    <div class="grid">
+      <label>Code patient
+        <input id="patient_code" type="text" placeholder="66844742" value="66844742">
+      </label>
+      <label>Chirurgien
+        <input id="surgeon" type="text" placeholder="Dr Briere" value="Dr Briere">
+      </label>
+    </div>
+  </div>
+
+  <!-- IOL -->
+  <div class="section">
+    <div class="section-title">Implant</div>
+    <div class="grid">
+      <label>Fabricant
+        <input id="manufacturer" type="text" placeholder="Alcon" value="Alcon">
+      </label>
+      <label>Modèle IOL
+        <input id="iol" type="text" placeholder="AcrySof SN60WF">
+      </label>
+      <label>Indice de réfraction
+        <select id="index">
+          <option value="1.3375" selected>1.3375</option>
+          <option value="1.332">1.332</option>
+          <option value="1.3315">1.3315</option>
+        </select>
+      </label>
+    </div>
+  </div>
+
+  <!-- Réfraction cible -->
+  <div class="section">
+    <div class="section-title">Réfraction cible</div>
+    <div class="grid">
+      <label>OD (œil droit)
+        <input id="target_od" type="number" step="0.25" value="0.00">
+      </label>
+      <label>OS (œil gauche)
+        <input id="target_og" type="number" step="0.25" value="0.00">
+      </label>
+    </div>
+  </div>
+
+  
+
+  <!-- Bouton -->
+  <button id="btn-calculer">Calculer sur ESCRS →</button>
+  <div id="status"></div>
+
+  <script src="../../dist/renderer/renderer.js" type="text/javascript"></script>
+</body>
+</html>

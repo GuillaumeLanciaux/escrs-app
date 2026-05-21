@@ -1,0 +1,10 @@
+# Dependencies for ESCRS-APP Python components
+pyodbc
+pdfplumber
+pandas
+pytesseract
+opencv-python-headless
+numpy
+
+# Optional / recommended tools
+# tesseract (binary) should be installed separately on the system
