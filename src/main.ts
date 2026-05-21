@@ -15,9 +15,7 @@ let mainWindow:  BrowserWindow | null = null;
 let escrsWindow: BrowserWindow | null = null;
 
 
-// ─────────────────────────────────────────────────────────────────────────────
 // 1. FENÊTRE PRINCIPALE
-// ─────────────────────────────────────────────────────────────────────────────
 
 function createMainWindow(): void {
   mainWindow = new BrowserWindow({
@@ -37,9 +35,7 @@ function createMainWindow(): void {
 }
 
 
-// ─────────────────────────────────────────────────────────────────────────────
 // 2. FENÊTRE ESCRS + EXPORT PDF
-// ─────────────────────────────────────────────────────────────────────────────
 
 async function _savePDF(win: BrowserWindow): Promise<void> {
   const { filePath } = await dialog.showSaveDialog(win, {
@@ -95,7 +91,6 @@ function createEscrsWindow(): BrowserWindow {
         document.dispatchEvent(new CustomEvent('escrs-print-request'));
       };
       document.addEventListener('escrs-print-request', function() {
-        // Signaler au main process via un message dans le titre temporairement
         const orig = document.title;
         document.title = '__ESCRS_PRINT__';
         setTimeout(() => { document.title = orig; }, 500);
@@ -116,15 +111,51 @@ function createEscrsWindow(): BrowserWindow {
 }
 
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 3. APPEL PYTHON
-// ─────────────────────────────────────────────────────────────────────────────
+// 3. APPEL PYTHON — helpers génériques
 
 interface PythonResult {
   script_js:     string;
   patient_escrs: Record<string, unknown>;
 }
 
+/** Lance Python avec des arguments arbitraires et retourne stdout parsé en JSON. */
+function runPythonArgs(args: string[]): Promise<unknown> {
+  return new Promise((resolve, reject) => {
+    const py = spawn('python', [PYTHON_SCRIPT, ...args], {
+      env: { ...process.env }
+    });
+
+    let stdout = '';
+    let stderr = '';
+
+    py.stdout.on('data', (d: Buffer) => stdout += d.toString());
+    py.stderr.on('data', (d: Buffer) => {
+      const line = d.toString();
+      stderr += line;
+      process.stdout.write('[Python] ' + line);
+    });
+
+    py.on('close', (code: number) => {
+      if (code !== 0) {
+        reject(new Error(`Python error (code ${code}):\n${stderr}`));
+        return;
+      }
+      // Trouver le premier '{' pour ignorer les éventuels logs avant le JSON
+      const jsonStart = stdout.indexOf('{');
+      if (jsonStart === -1) {
+        reject(new Error(`Aucun JSON trouvé dans stdout:\n${stdout}`));
+        return;
+      }
+      try {
+        resolve(JSON.parse(stdout.slice(jsonStart)));
+      } catch {
+        reject(new Error(`JSON parse error:\n${stdout}`));
+      }
+    });
+  });
+}
+
+/** Lance Python avec un fichier de paramètres JSON (mode Electron existant). */
 function runPython(params: Record<string, unknown>): Promise<PythonResult> {
   return new Promise((resolve, reject) => {
     const tmpFile = path.join(os.tmpdir(), 'escrs_params.json');
@@ -152,7 +183,6 @@ function runPython(params: Record<string, unknown>): Promise<PythonResult> {
         return;
       }
 
-      // Chercher le début du JSON produit par Python
       const jsonStart = stdout.indexOf('{"script_js"');
       if (jsonStart === -1) {
         reject(new Error(`Aucun JSON trouvé dans stdout:\n${stdout}`));
@@ -169,10 +199,23 @@ function runPython(params: Record<string, unknown>): Promise<PythonResult> {
 }
 
 
-// ─────────────────────────────────────────────────────────────────────────────
 // 4. IPC
-// ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * Détection automatique du patient actif dans Access.
+ * Retourne { code, nom, prenom } ou { code: null } si rien n'est ouvert.
+ */
+ipcMain.handle('get-active-patient', async () => {
+  try {
+    const result = await runPythonArgs(['--get-active-patient']) as Record<string, string | null>;
+    return { success: true, patient: result };
+  } catch (err) {
+    console.error('get-active-patient error:', err);
+    return { success: false, patient: { code: null }, error: String(err) };
+  }
+});
+
+/** Calcul ESCRS principal — inchangé. */
 ipcMain.handle('calculer-escrs', async (_event, params: Record<string, unknown>) => {
   try {
     const result = await runPython(params);
@@ -198,7 +241,6 @@ ipcMain.handle('calculer-escrs', async (_event, params: Record<string, unknown>)
       `);
     } else {
       // Fenêtre déjà ouverte — juste la mettre au premier plan
-      // Si on est sur la page résultats, cliquer Edit pour revenir au formulaire
       await escrsWindow.webContents.executeJavaScript(`
         (function() {
           const btns = Array.from(document.querySelectorAll('button'));
@@ -233,12 +275,9 @@ ipcMain.handle('save-pdf', async () => {
 });
 
 
-// ─────────────────────────────────────────────────────────────────────────────
 // 5. LIFECYCLE
-// ─────────────────────────────────────────────────────────────────────────────
 
 app.whenReady().then(() => {
-  // Configurer la session persistante avec un User-Agent Chrome réaliste
   const escrsSession = require('electron').session.fromPartition('persist:escrs');
   escrsSession.setUserAgent(
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 ' +
