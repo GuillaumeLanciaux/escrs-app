@@ -27,6 +27,9 @@ Utilisation :
 CLI :
     python escrs_connector.py 66844742 --surgeon "Dr Dupont" \
            --manufacturer Alcon --iol "AcrySof SN60WF"
+
+    python escrs_connector.py --get-active-patient
+    # → {"code": "66844742", "nom": "DUPONT", "prenom": "Jean"} ou {"code": null}
 """
 
 import re
@@ -37,7 +40,7 @@ import io
 from datetime import date, datetime
 from pathlib import Path
 
-# ── Import des modules locaux ─────────────────────────────────────────────────
+# Import des modules locaux
 from extraction_biometrie import charger_biometrie, _db_connect, find_patient_folder
 from pachymetry_ocr import extraire_pachymetrie
 
@@ -46,19 +49,78 @@ from pachymetry_ocr import extraire_pachymetrie
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 
-# ═════════════════════════════════════════════════════════════════════════════
 # CONFIGURATION
-# ═════════════════════════════════════════════════════════════════════════════
-FICHIER_MDB = Path(r"C:\Stage\database\baseSQL\PUBLIC.MDB")
-DEST_PHOTOS = Path(r"c:\Stage\database\donnés_pdf")
+FICHIER_MDB     = Path(r"C:\Stage\database\baseSQL\PUBLIC.MDB")
+DEST_PHOTOS     = Path(r"c:\Stage\database\donnés_pdf")
 ESCRS_INJECT_JS = Path(__file__).parent / "escrs_inject.js"
 
+# Champs Access du formulaire patient (identiques à suivi_myopie.py)
+_ACCESS_FIELD_CODE   = "Code patient"
+_ACCESS_FIELD_NOM    = "NOM"
+_ACCESS_FIELD_PRENOM = "Prénom"
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 1. SEXE DEPUIS MDB + FALLBACK SS
-# ─────────────────────────────────────────────────────────────────────────────
+
+# 0. DÉTECTION AUTOMATIQUE DU PATIENT ACTIF DANS ACCESS (COM Interop)
+
 def _log(*args, **kwargs):
     print(*args, **kwargs, file=sys.stderr, flush=True)
+
+
+try:
+    import win32com.client as _win32
+    _WIN32_AVAILABLE = True
+except ImportError:
+    _WIN32_AVAILABLE = False
+    _log("pywin32 non disponible — détection automatique désactivée.")
+
+
+def get_active_patient() -> dict | None:
+    """
+    Lit le patient actuellement ouvert dans Microsoft Access via COM Interop.
+
+    Retourne :
+        {"code": str, "nom": str, "prenom": str}  si un patient est ouvert
+        None  si Access est fermé, aucun formulaire actif, ou pywin32 absent.
+
+    Prérequis :
+        pip install pywin32
+        Access doit être ouvert avec le formulaire patient visible.
+    """
+    if not _WIN32_AVAILABLE:
+        return None
+    try:
+        access = _win32.GetActiveObject("Access.Application")
+        form   = access.Screen.ActiveForm
+        if form is None:
+            return None
+
+        target = {_ACCESS_FIELD_CODE, _ACCESS_FIELD_NOM, _ACCESS_FIELD_PRENOM}
+        data: dict = {}
+
+        for i in range(form.Controls.Count):
+            ctrl = form.Controls(i)
+            try:
+                if str(ctrl.Name) in target:
+                    data[ctrl.Name] = ctrl.Value
+            except Exception:
+                pass
+
+        if not target.issubset(data.keys()):
+            _log("COM: formulaire ouvert mais champs requis absents.")
+            return None
+
+        return {
+            "code":   str(data[_ACCESS_FIELD_CODE]),
+            "nom":    str(data[_ACCESS_FIELD_NOM]),
+            "prenom": str(data[_ACCESS_FIELD_PRENOM]),
+        }
+
+    except Exception as e:
+        _log(f"COM: aucun patient actif ({e})")
+        return None
+
+
+# 1. SEXE DEPUIS MDB + FALLBACK SS
 
 def _sexe_depuis_ss(ss: str) -> str | None:
     """Extrait le sexe depuis le premier chiffre du numéro SS."""
@@ -93,13 +155,11 @@ def _get_patient_info(patient_code: str, conn: pyodbc.Connection) -> dict:
         return {"gender": gender}
 
     except Exception as e:
-        _log("  ⚠ Erreur lecture info patient : {e}")
+        _log(f"  ⚠ Erreur lecture info patient : {e}")
         return {"gender": "Male"}
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # 2. CCT DEPUIS PACHYMÉTRIE OPTOVUE
-# ─────────────────────────────────────────────────────────────────────────────
 
 def _get_cct(patient_code: str, dossier: Path, conn: pyodbc.Connection) -> dict:
     """
@@ -141,7 +201,7 @@ def _get_cct(patient_code: str, dossier: Path, conn: pyodbc.Connection) -> dict:
 
         images.sort(key=_date_nom)
         derniere = images[-1]
-        _log("  ✓ Pachymétrie : {derniere.name}")
+        _log(f"  ✓ Pachymétrie : {derniere.name}")
 
         # Extraction OCR — detecter_type_rapport() gère OU/OD/OS automatiquement
         resultat = extraire_pachymetrie(str(derniere))
@@ -149,18 +209,16 @@ def _get_cct(patient_code: str, dossier: Path, conn: pyodbc.Connection) -> dict:
 
         od_val = pachy.get("OD", {}).get("valeur_µm")
         os_val = pachy.get("OS", {}).get("valeur_µm")
-        _log("  ✓ CCT OD={od_val}µm  OS={os_val}µm")
+        _log(f"  ✓ CCT OD={od_val}µm  OS={os_val}µm")
 
         return {"OD": od_val, "OS": os_val}
 
     except Exception as e:
-        _log("  ⚠ Erreur pachymétrie : {e}")
+        _log(f"  ⚠ Erreur pachymétrie : {e}")
         return {"OD": None, "OS": None}
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # 3. CALCUL ÂGE
-# ─────────────────────────────────────────────────────────────────────────────
 
 def _calculer_age(date_naissance) -> int | None:
     if not date_naissance:
@@ -184,9 +242,7 @@ def _calculer_age(date_naissance) -> int | None:
         return None
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # 4. CONVERSION SESSION → OBJET ESCRS
-# ─────────────────────────────────────────────────────────────────────────────
 
 # Formules par défaut selon le mode
 FORMULES_PAR_MODE = {
@@ -221,21 +277,22 @@ def _session_to_escrs(
     post_lasik_type: str = 'Myopic',
 ) -> dict:
 
-    patient  = session['patient']
-    OD       = session['OD']
-    OS       = session['OS']
+    patient = session.get("patient", {})
+    nom     = (patient.get("nom")    or "").strip().upper()
+    prenom  = (patient.get("prenom") or "").strip().capitalize()
+    initials = f"{nom[:3]}{prenom[:2]}".upper() if nom and prenom else nom[:5].upper()
+    dob      = patient.get("date_naissance")
+    age      = _calculer_age(dob)
 
-    age      = _calculer_age(patient.get('date_naissance'))
-    nom      = patient.get('nom', '')
-    prenom   = patient.get('prenom', '')
-    initials = f"{prenom[0].upper()}.{nom[0].upper()}" if prenom and nom else ''
+    OD = session.get("OD", {})
+    OS = session.get("OS", {})
 
-    def _oeil(data: dict, cct_val, k1axis, k2axis, incision, sia) -> dict:
+    def _oeil(data, cct_val, k1axis=None, k2axis=None, incision=None, sia=None):
         oeil = {
             "al":               data.get("AL_mm"),
             "acd":              data.get("ACD_mm"),
-            "lt":               None,           # non disponible IOLMaster
-            "cct":              cct_val,        # depuis pachymétrie OCR
+            "lt":               data.get("LT_mm"),
+            "cct":              cct_val,
             "wtw":              data.get("WTW_mm"),
             "k1":               data.get("K1_D"),
             "k2":               data.get("K2_D"),
@@ -245,10 +302,10 @@ def _session_to_escrs(
         # Champs toric
         if mode == 'toric':
             oeil.update({
-                "k1axis":   data.get("K1_axis"),
-                "k2axis":   data.get("K2_axis"),
-                "incision": 135.0,
-                "sia":      0.3,
+                "k1axis":   k1axis or data.get("K1_axis"),
+                "k2axis":   k2axis or data.get("K2_axis"),
+                "incision": incision or 135.0,
+                "sia":      sia or 0.3,
             })
         return oeil
 
@@ -273,9 +330,7 @@ def _session_to_escrs(
     return result
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # 5. GÉNÉRATION DU SCRIPT JS
-# ─────────────────────────────────────────────────────────────────────────────
 
 def _generer_script_js(patient_escrs: dict) -> str:
     if not ESCRS_INJECT_JS.exists():
@@ -289,9 +344,7 @@ def _generer_script_js(patient_escrs: dict) -> str:
     return script
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # 6. POINT D'ENTRÉE PRINCIPAL
-# ─────────────────────────────────────────────────────────────────────────────
 
 def preparer_patient_escrs(
     patient_code:    str,
@@ -319,34 +372,10 @@ def preparer_patient_escrs(
     """
     Charge toutes les données d'un patient et retourne l'objet ESCRS
     avec le script JS prêt à injecter dans le WebView.
-
-    Parameters
-    ----------
-    patient_code    : Code patient (ex: "66844742")
-    surgeon         : Nom du chirurgien affiché dans ESCRS
-    manufacturer    : Fabricant de l'IOL (ex: "Alcon")
-    iol             : Modèle d'IOL exact tel qu'affiché dans ESCRS
-    mode            : 'normal' | 'toric' | 'postlasik'
-    formulas        : Liste de formules (None = défaut selon mode)
-    index           : Indice de réfraction ('1.3375' | '1.332' | '1.3315')
-    target_od/og    : Réfraction cible en dioptries
-    session_index   : Index de session (-1 = la plus récente)
-    k1/k2axis_*     : Axes kératométriques en degrés (toric uniquement)
-    incision_*      : Axe d'incision en degrés (toric uniquement)
-    sia_*           : Astigmatisme induit chirurgicalement en D (toric)
-    post_lasik_type : 'Myopic' | 'Hyperopic' (postlasik uniquement)
-
-    Returns
-    -------
-    {
-        "patient_escrs": dict,   # données formatées
-        "script_js":     str,    # script JS à injecter dans le WebView
-        "session":       dict,   # session biométrique brute
-    }
     """
-    _log("▶ Préparation patient {patient_code}…")
+    _log(f"▶ Préparation patient {patient_code}…")
 
-    # ── Connexion unique partagée ───────────────────────────────────────────
+    # Connexion unique partagée
     conn    = _db_connect()
     dossier = find_patient_folder(patient_code, conn)
 
@@ -358,14 +387,14 @@ def preparer_patient_escrs(
     cct          = _get_cct(patient_code, dossier, conn)
     conn.close()
 
-    # ── Biométrie ───────────────────────────────────────────────────────────
+    # Biométrie
     sessions = charger_biometrie(patient_code)
     if not sessions:
         raise ValueError(f"Aucune session biométrique pour {patient_code}")
 
     session = sessions[session_index]
 
-    # ── Conversion ──────────────────────────────────────────────────────────
+    # Conversion
     patient_escrs = _session_to_escrs(
         session, patient_info, cct,
         surgeon, manufacturer, iol,
@@ -377,10 +406,10 @@ def preparer_patient_escrs(
 
     script_js = _generer_script_js(patient_escrs)
 
-    _log("  ✓ {patient_escrs['initials']} | "
-          f"{patient_escrs['gender']} | "
-          f"{patient_escrs['age']} ans | "
-          f"CCT OD={cct['OD']}µm OS={cct['OS']}µm")
+    _log(f"  ✓ {patient_escrs['initials']} | "
+         f"{patient_escrs['gender']} | "
+         f"{patient_escrs['age']} ans | "
+         f"CCT OD={cct['OD']}µm OS={cct['OS']}µm")
 
     return {
         "patient_escrs": patient_escrs,
@@ -389,27 +418,36 @@ def preparer_patient_escrs(
     }
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # CLI
-# ─────────────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     import argparse
-    import sys
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("patient_code",    nargs="?", help="Code patient")
-    parser.add_argument("--params-file",   help="Fichier JSON de paramètres (mode Electron)")
-    parser.add_argument("--surgeon",       default="Dr Dupont")
-    parser.add_argument("--manufacturer",  default="Alcon")
-    parser.add_argument("--iol",           default="AcrySof SN60WF")
-    parser.add_argument("--mode",          default="normal",
+    parser.add_argument("patient_code",       nargs="?", help="Code patient")
+    parser.add_argument("--params-file",      help="Fichier JSON de paramètres (mode Electron)")
+    parser.add_argument("--get-active-patient", action="store_true",
+                        help="Lit le patient actif dans Access et retourne son code en JSON")
+    parser.add_argument("--surgeon",          default="Dr Dupont")
+    parser.add_argument("--manufacturer",     default="Alcon")
+    parser.add_argument("--iol",              default="AcrySof SN60WF")
+    parser.add_argument("--mode",             default="normal",
                         choices=["normal", "toric", "postlasik"])
-    parser.add_argument("--json",          action="store_true")
-    parser.add_argument("--js",            action="store_true")
+    parser.add_argument("--json",             action="store_true")
+    parser.add_argument("--js",               action="store_true")
     args = parser.parse_args()
 
-    # ── Mode Electron : lire les paramètres depuis un fichier JSON ──────────
+    # Mode détection automatique du patient actif
+    # Appelé par Electron via IPC "get-active-patient"
+    if args.get_active_patient:
+        patient = get_active_patient()
+        if patient:
+            print(json.dumps(patient, ensure_ascii=False))
+        else:
+            print(json.dumps({"code": None}))
+        sys.exit(0)
+
+    # Mode Electron : lire les paramètres depuis un fichier JSON
     if args.params_file:
         with open(args.params_file, encoding='utf-8') as f:
             p = json.load(f)
@@ -441,7 +479,7 @@ if __name__ == "__main__":
         }, ensure_ascii=False))
         sys.exit(0)
 
-    # ── Mode CLI classique ──────────────────────────────────────────────────
+    # Mode CLI classique
     if not args.patient_code:
         parser.error("patient_code requis en mode CLI")
 
@@ -458,4 +496,4 @@ if __name__ == "__main__":
     elif args.js:
         print(result["script_js"])
     else:
-        _log("\n✓ Patient prêt — {result['patient_escrs']['initials']}")
+        _log(f"\n✓ Patient prêt — {result['patient_escrs']['initials']}")
