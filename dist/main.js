@@ -45,9 +45,7 @@ const PYTHON_SCRIPT = path.join(__dirname, '..', 'python', 'escrs_connector.py')
 const ESCRS_URL = 'https://iolcalculator.escrs.org';
 let mainWindow = null;
 let escrsWindow = null;
-// ─────────────────────────────────────────────────────────────────────────────
 // 1. FENÊTRE PRINCIPALE
-// ─────────────────────────────────────────────────────────────────────────────
 function createMainWindow() {
     mainWindow = new electron_1.BrowserWindow({
         width: 600,
@@ -63,16 +61,16 @@ function createMainWindow() {
     // mainWindow.webContents.openDevTools();
     mainWindow.on('closed', () => { mainWindow = null; });
 }
-// ─────────────────────────────────────────────────────────────────────────────
 // 2. FENÊTRE ESCRS + EXPORT PDF
-// ─────────────────────────────────────────────────────────────────────────────
 async function _savePDF(win) {
-    const { filePath } = await electron_1.dialog.showSaveDialog(win, {
+    const parentWin = win.isDestroyed() ? (mainWindow ?? undefined) : win;
+    // ✅ CORRECTION : ne pas destructurer directement, utiliser result
+    const result = await electron_1.dialog.showSaveDialog(parentWin, {
         title: 'Enregistrer les résultats ESCRS',
         defaultPath: `ESCRS_${new Date().toISOString().slice(0, 10)}.pdf`,
         filters: [{ name: 'PDF', extensions: ['pdf'] }],
     });
-    if (!filePath)
+    if (result.canceled || !result.filePath)
         return;
     try {
         const data = await win.webContents.printToPDF({
@@ -83,8 +81,8 @@ async function _savePDF(win) {
                 marginType: 'printableArea',
             },
         });
-        fs.writeFileSync(filePath, data);
-        console.log(`  ✓ PDF enregistré : ${filePath}`);
+        fs.writeFileSync(result.filePath, data);
+        console.log(`  ✓ PDF enregistré : ${result.filePath}`);
     }
     catch (err) {
         console.error('Erreur export PDF :', err);
@@ -116,7 +114,6 @@ function createEscrsWindow() {
         document.dispatchEvent(new CustomEvent('escrs-print-request'));
       };
       document.addEventListener('escrs-print-request', function() {
-        // Signaler au main process via un message dans le titre temporairement
         const orig = document.title;
         document.title = '__ESCRS_PRINT__';
         setTimeout(() => { document.title = orig; }, 500);
@@ -133,6 +130,40 @@ function createEscrsWindow() {
     win.on('closed', () => { escrsWindow = null; });
     return win;
 }
+/** Lance Python avec des arguments arbitraires et retourne stdout parsé en JSON. */
+function runPythonArgs(args) {
+    return new Promise((resolve, reject) => {
+        const py = (0, child_process_1.spawn)('python', [PYTHON_SCRIPT, ...args], {
+            env: { ...process.env }
+        });
+        let stdout = '';
+        let stderr = '';
+        py.stdout.on('data', (d) => stdout += d.toString());
+        py.stderr.on('data', (d) => {
+            const line = d.toString();
+            stderr += line;
+            process.stdout.write('[Python] ' + line);
+        });
+        py.on('close', (code) => {
+            if (code !== 0) {
+                reject(new Error(`Python error (code ${code}):\n${stderr}`));
+                return;
+            }
+            const jsonStart = stdout.indexOf('{');
+            if (jsonStart === -1) {
+                reject(new Error(`Aucun JSON trouvé dans stdout:\n${stdout}`));
+                return;
+            }
+            try {
+                resolve(JSON.parse(stdout.slice(jsonStart)));
+            }
+            catch {
+                reject(new Error(`JSON parse error:\n${stdout}`));
+            }
+        });
+    });
+}
+/** Lance Python avec un fichier de paramètres JSON (mode Electron existant). */
 function runPython(params) {
     return new Promise((resolve, reject) => {
         const tmpFile = path.join(os.tmpdir(), 'escrs_params.json');
@@ -157,7 +188,6 @@ function runPython(params) {
                 reject(new Error(`Python error (code ${code}):\n${stderr}`));
                 return;
             }
-            // Chercher le début du JSON produit par Python
             const jsonStart = stdout.indexOf('{"script_js"');
             if (jsonStart === -1) {
                 reject(new Error(`Aucun JSON trouvé dans stdout:\n${stdout}`));
@@ -172,13 +202,25 @@ function runPython(params) {
         });
     });
 }
-// ─────────────────────────────────────────────────────────────────────────────
 // 4. IPC
-// ─────────────────────────────────────────────────────────────────────────────
+/**
+ * Détection automatique du patient actif dans Access.
+ * Retourne { code, nom, prenom } ou { code: null } si rien n'est ouvert.
+ */
+electron_1.ipcMain.handle('get-active-patient', async () => {
+    try {
+        const result = await runPythonArgs(['--get-active-patient']);
+        return { success: true, patient: result };
+    }
+    catch (err) {
+        console.error('get-active-patient error:', err);
+        return { success: false, patient: { code: null }, error: String(err) };
+    }
+});
+/** Calcul ESCRS principal — inchangé. */
 electron_1.ipcMain.handle('calculer-escrs', async (_event, params) => {
     try {
         const result = await runPython(params);
-        // ── Créer et charger la page une seule fois ────────────────────────────
         if (!escrsWindow || escrsWindow.isDestroyed()) {
             escrsWindow = createEscrsWindow();
             await escrsWindow.loadURL(ESCRS_URL);
@@ -198,8 +240,6 @@ electron_1.ipcMain.handle('calculer-escrs', async (_event, params) => {
       `);
         }
         else {
-            // Fenêtre déjà ouverte — juste la mettre au premier plan
-            // Si on est sur la page résultats, cliquer Edit pour revenir au formulaire
             await escrsWindow.webContents.executeJavaScript(`
         (function() {
           const btns = Array.from(document.querySelectorAll('button'));
@@ -229,11 +269,8 @@ electron_1.ipcMain.handle('save-pdf', async () => {
     }
     return { success: false, error: 'Fenêtre ESCRS non disponible' };
 });
-// ─────────────────────────────────────────────────────────────────────────────
 // 5. LIFECYCLE
-// ─────────────────────────────────────────────────────────────────────────────
 electron_1.app.whenReady().then(() => {
-    // Configurer la session persistante avec un User-Agent Chrome réaliste
     const escrsSession = require('electron').session.fromPartition('persist:escrs');
     escrsSession.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 ' +
         '(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36');

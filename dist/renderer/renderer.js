@@ -12,8 +12,10 @@ document.querySelectorAll('.tab').forEach(tab => {
         document.body.className = `mode-${currentMode}`;
     });
 });
-// ── Bouton calculer ────────────────────────────────────────────────────────
+// ── Helpers ────────────────────────────────────────────────────────────────
 const btn = document.getElementById('btn-calculer');
+const btnAutoDetect = document.getElementById('btn-auto-detect');
+const patientLabel = document.getElementById('patient-label');
 const statusDiv = document.getElementById('status');
 function setStatus(msg, type) {
     statusDiv.textContent = msg;
@@ -26,6 +28,39 @@ function getNum(id) {
     const v = parseFloat(getVal(id));
     return isNaN(v) ? null : v;
 }
+function setPatientDisplay(patient) {
+    const codeInput = document.getElementById('patient_code');
+    if (patient.code) {
+        codeInput.value = patient.code;
+        const name = [patient.prenom, patient.nom].filter(Boolean).join(' ');
+        patientLabel.textContent = name ? `— ${name}` : '';
+        patientLabel.style.display = name ? 'inline' : 'none';
+    }
+}
+// ── Détection automatique ─────────────────────────────────────────────────
+btnAutoDetect.addEventListener('click', async () => {
+    btnAutoDetect.disabled = true;
+    setStatus('⏳ Lecture du patient actif dans Access…', 'info');
+    try {
+        const api = window.escrsAPI;
+        const result = await api.getActivePatient();
+        if (result.success && result.patient.code) {
+            setPatientDisplay(result.patient);
+            const name = [result.patient.prenom, result.patient.nom].filter(Boolean).join(' ');
+            setStatus(`✓ Patient détecté : ${name} (${result.patient.code})`, 'success');
+        }
+        else {
+            setStatus('⚠ Aucun patient ouvert dans Access — saisissez le code manuellement.', 'error');
+        }
+    }
+    catch (err) {
+        setStatus(`✗ Erreur détection : ${err}`, 'error');
+    }
+    finally {
+        btnAutoDetect.disabled = false;
+    }
+});
+// ── Bouton calculer ────────────────────────────────────────────────────────
 btn.addEventListener('click', async () => {
     const patientCode = getVal('patient_code');
     if (!patientCode) {

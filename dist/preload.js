@@ -11,4 +11,11 @@ electron_1.contextBridge.exposeInMainWorld('escrsAPI', {
      * Appelle Python, ouvre le WebView ESCRS et injecte les données.
      */
     calculer: (params) => electron_1.ipcRenderer.invoke('calculer-escrs', params),
+    /**
+     * Lit le patient actuellement ouvert dans Microsoft Access via COM Interop.
+     * Retourne { success, patient: { code, nom, prenom } | { code: null } }
+     */
+    getActivePatient: () => electron_1.ipcRenderer.invoke('get-active-patient'),
+    /** Déclenche manuellement l'export PDF de la fenêtre ESCRS. */
+    savePDF: () => electron_1.ipcRenderer.invoke('save-pdf'),
 });

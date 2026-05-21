@@ -40,14 +40,14 @@ function createMainWindow(): void {
 async function _savePDF(win: BrowserWindow): Promise<void> {
   const parentWin = win.isDestroyed() ? (mainWindow ?? undefined) : win;
 
-  // ✅ CORRECTION : ne pas destructurer directement, utiliser result
-  const result = await dialog.showSaveDialog(parentWin!, {
+  const saveResult = await dialog.showSaveDialog(parentWin!, {
     title:       'Enregistrer les résultats ESCRS',
     defaultPath: `ESCRS_${new Date().toISOString().slice(0, 10)}.pdf`,
     filters:     [{ name: 'PDF', extensions: ['pdf'] }],
   });
 
-  if (result.canceled || !result.filePath) return;
+  const filePath = saveResult.filePath;
+  if (saveResult.canceled || !filePath) return;
 
   try {
     const data = await win.webContents.printToPDF({
@@ -59,8 +59,8 @@ async function _savePDF(win: BrowserWindow): Promise<void> {
       },
     });
 
-    fs.writeFileSync(result.filePath, data);
-    console.log(`  ✓ PDF enregistré : ${result.filePath}`);
+    fs.writeFileSync(filePath, data);
+    console.log(`  ✓ PDF enregistré : ${filePath}`);
   } catch (err) {
     console.error('Erreur export PDF :', err);
     dialog.showErrorBox('Erreur', `Impossible d'enregistrer le PDF :\n${err}`);
