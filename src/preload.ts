@@ -14,4 +14,15 @@ contextBridge.exposeInMainWorld('escrsAPI', {
   calculer: (params: Record<string, unknown>) =>
     ipcRenderer.invoke('calculer-escrs', params),
 
+  /**
+   * Lit le patient actuellement ouvert dans Microsoft Access via COM Interop.
+   * Retourne { success, patient: { code, nom, prenom } | { code: null } }
+   */
+  getActivePatient: () =>
+    ipcRenderer.invoke('get-active-patient'),
+
+  /** Déclenche manuellement l'export PDF de la fenêtre ESCRS. */
+  savePDF: () =>
+    ipcRenderer.invoke('save-pdf'),
+
 });
