@@ -38,13 +38,14 @@ function createMainWindow(): void {
 // 2. FENÊTRE ESCRS + EXPORT PDF
 
 async function _savePDF(win: BrowserWindow): Promise<void> {
-  const { filePath } = await dialog.showSaveDialog(win, {
+  const parentWin = win.isDestroyed() ? (mainWindow ?? undefined) : win;
+  const { canceled, filePath } = await dialog.showSaveDialog(parentWin!, {
     title:       'Enregistrer les résultats ESCRS',
     defaultPath: `ESCRS_${new Date().toISOString().slice(0, 10)}.pdf`,
     filters:     [{ name: 'PDF', extensions: ['pdf'] }],
   });
 
-  if (!filePath) return;
+  if (canceled || !filePath) return;
 
   try {
     const data = await win.webContents.printToPDF({
