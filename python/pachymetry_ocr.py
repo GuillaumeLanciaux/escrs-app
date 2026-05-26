@@ -32,28 +32,21 @@ from collections import Counter
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _find_tesseract() -> str:
-    """
-    Cherche tesseract.exe dans les emplacements connus, par ordre de priorité :
-      1. Dossier vendor/ embarqué dans le projet
-      2. AlmaPro
-      3. Installation standard Tesseract-OCR
-      4. PATH système
-    """
     chemins = [
-        # Tesseract embarqué dans le projet (priorité maximale)
+        # Tesseract embarqué dans le projet — TOUJOURS prioritaire
+        # pour éviter le conflit avec Tesseract 3.02 d'AlmaPro
         Path(__file__).parent.parent / "vendor" / "tesseract" / "tesseract.exe",
-        # AlmaPro
-        Path(r"C:\almapro\tesseract\tesseract.exe"),
-        Path(r"C:\AlmaPro\tesseract\tesseract.exe"),
-        Path(r"C:\Program Files\AlmaPro\tesseract\tesseract.exe"),
+        Path(__file__).parent / "tesseract" / "tesseract.exe",
         # Chemin manuel projet
         Path(r"C:\Stage\database\test\tesseract\tesseract.exe"),
-        # Installation standard Windows
+        # Installation standard Windows (v4/v5)
         Path(r"C:\Program Files\Tesseract-OCR\tesseract.exe"),
         Path(r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe"),
-        # AppData utilisateur
-        Path.home() / "AppData" / "Local" / "Programs" / "Tesseract-OCR" / "tesseract.exe",
+        # AlmaPro en DERNIER — v3.02 incompatible
+        Path(r"C:\almapro\tesseract\tesseract.exe"),
+        Path(r"C:\AlmaPro\tesseract\tesseract.exe"),
     ]
+    # ...
 
     for chemin in chemins:
         if chemin.exists():
