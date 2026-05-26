@@ -72,30 +72,40 @@ pytesseract.pytesseract.tesseract_cmd = _find_tesseract()
 # ─────────────────────────────────────────────────────────────────────────────
 
 ZONES = {
+    # Rapport standard OU (deux yeux)
     "ou_report": {
         "OD": (0.157, 0.252, 0.232, 0.330),
         "OS": (0.752, 0.272, 0.852, 0.330),
     },
+    # Rapport standard œil unique
     "single_OD": {
         "OD": (0.376, 0.612, 0.464, 0.709),
     },
     "single_OS": {
         "OS": (0.376, 0.612, 0.464, 0.709),
     },
+    # Rapport PachymetryWide œil unique
+    "wide_OD": {
+        "OD": (0.444, 0.672, 0.494, 0.715),
+    },
+    "wide_OS": {
+        "OS": (0.444, 0.672, 0.494, 0.715),
+    },
 }
-
-
+ 
+ 
 # ─────────────────────────────────────────────────────────────────────────────
 # Détection du type de rapport
 # ─────────────────────────────────────────────────────────────────────────────
-
+ 
 def detecter_type_rapport(img):
     """
     Lit le bandeau supérieur de l'image pour identifier :
+      - PachymetryWide OD ou OS
       - OU Report (deux yeux)
       - Single eye OD
       - Single eye OS
-    Retourne : "ou_report", "single_OD" ou "single_OS"
+    Retourne : "wide_OD", "wide_OS", "ou_report", "single_OD" ou "single_OS"
     """
     top = img[0:80, :]
     gray = cv2.cvtColor(top, cv2.COLOR_BGR2GRAY)
@@ -104,19 +114,26 @@ def detecter_type_rapport(img):
     texte = pytesseract.image_to_string(
         binary, config="--psm 11"
     ).lower()
-
+ 
+    # PachymetryWide — détecter en priorité avant les autres
+    if "pachymetrywide" in texte or "pachymetry wide" in texte:
+        if "right" in texte or "od" in texte:
+            return "wide_OD"
+        return "wide_OS"  # "left" / "os" ou défaut OS
+ 
+    # Rapport standard
     ou_report = "ou report" in texte or ("left" in texte and "right" in texte)
     if ou_report:
         return "ou_report"
     if "right" in texte or "od" in texte:
         return "single_OD"
     return "single_OS"
-
-
+ 
+ 
 # ─────────────────────────────────────────────────────────────────────────────
 # Extraction OCR d'une zone
 # ─────────────────────────────────────────────────────────────────────────────
-
+ 
 def ocr_zone_centrale(img, zone_ratio, label, debug=False):
     """
     Extrait la valeur pachymétrique centrale d'une zone.
@@ -127,16 +144,16 @@ def ocr_zone_centrale(img, zone_ratio, label, debug=False):
     y1 = int(zone_ratio[1] * h)
     x2 = int(zone_ratio[2] * w)
     y2 = int(zone_ratio[3] * h)
-
+ 
     zone = img[y1:y2, x1:x2]
     gray = cv2.cvtColor(zone, cv2.COLOR_BGR2GRAY)
-
+ 
     if debug:
         cv2.imwrite(f"debug_zone_{label}.png", zone)
         print(f"  [{label}] Zone pixels: ({x1},{y1}) -> ({x2},{y2})")
-
+ 
     votes = []
-
+ 
     for scale in [3, 4]:
         big = cv2.resize(gray, None, fx=scale, fy=scale,
                          interpolation=cv2.INTER_CUBIC)
@@ -157,41 +174,41 @@ def ocr_zone_centrale(img, zone_ratio, label, debug=False):
                                 and int(data["conf"][i]) > 40
                                 and 400 <= int(t) <= 800):
                             votes.append(t)
-
+ 
     if not votes:
         return {"valeur_µm": None, "confiance_%": 0, "votes": {}}
-
+ 
     comptage = Counter(votes)
     meilleure_valeur = comptage.most_common(1)[0][0]
     confiance = round(comptage[meilleure_valeur] / len(votes) * 100)
-
+ 
     return {
         "valeur_µm": int(meilleure_valeur),
         "confiance_%": confiance,
         "votes": dict(comptage)
     }
-
-
+ 
+ 
 # ─────────────────────────────────────────────────────────────────────────────
 # Point d'entrée principal
 # ─────────────────────────────────────────────────────────────────────────────
-
+ 
 def extraire_pachymetrie(chemin_image, debug=False):
     img = cv2.imread(chemin_image)
     if img is None:
         raise FileNotFoundError(f"Image introuvable : {chemin_image}")
-
+ 
     type_rapport = detecter_type_rapport(img)
     zones = ZONES[type_rapport]
-
+ 
     if debug:
         print(f"Type de rapport detecte : {type_rapport}")
         print(f"Zones utilisees : {zones}")
-
+ 
     resultats = {}
     for oeil, zone_ratio in zones.items():
         resultats[oeil] = ocr_zone_centrale(img, zone_ratio, oeil, debug)
-
+ 
     # Asymétrie si les deux yeux sont présents
     asymetrie = None
     if "OD" in resultats and "OS" in resultats:
@@ -199,13 +216,13 @@ def extraire_pachymetrie(chemin_image, debug=False):
         os_val = resultats["OS"]["valeur_µm"]
         if od_val and os_val:
             asymetrie = abs(od_val - os_val)
-
+ 
     # Norme indicative (population générale)
     norme = {}
     for oeil, res in resultats.items():
         val = res["valeur_µm"]
         norme[f"{oeil}_dans_norme"] = (500 <= val <= 570) if val else None
-
+ 
     return {
         "fichier": chemin_image,
         "type_rapport": type_rapport,
@@ -213,12 +230,12 @@ def extraire_pachymetrie(chemin_image, debug=False):
         "asymetrie_µm": asymetrie,
         "norme_indicative_500_570µm": norme,
     }
-
-
+ 
+ 
 # ─────────────────────────────────────────────────────────────────────────────
 # CLI
 # ─────────────────────────────────────────────────────────────────────────────
-
+ 
 if __name__ == "__main__":
     debug = "--debug" in sys.argv
     chemin = next(
