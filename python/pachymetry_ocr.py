@@ -35,8 +35,8 @@ def _find_tesseract() -> str:
     chemins = [
         # Tesseract embarqué dans le projet — TOUJOURS prioritaire
         # pour éviter le conflit avec Tesseract 3.02 d'AlmaPro
-        Path(__file__).parent.parent / "vendor" / "tesseract" / "tesseract.exe",
-        Path(__file__).parent / "tesseract" / "tesseract.exe",
+        Path(__file__).parent.parent / "vendor" / "tesseract.exe",
+        Path(__file__).parent / "tesseract.exe",
         # Chemin manuel projet
         Path(r"C:\Stage\database\test\tesseract\tesseract.exe"),
         # Installation standard Windows (v4/v5)
