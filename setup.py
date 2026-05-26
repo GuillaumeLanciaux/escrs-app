@@ -266,6 +266,12 @@ def compiler_typescript() -> bool:
     ok("TypeScript compilé")
     return True
 
+def _check_pywin32() -> bool:
+    try:
+        import win32com.client
+        return True
+    except ImportError:
+        return False
 
 def verifier_installation_finale() -> None:
     titre("Vérification finale")
@@ -279,6 +285,7 @@ def verifier_installation_finale() -> None:
         "dist/main.js"         : (PROJECT_DIR / "dist" / "main.js").exists(),
         "escrs_inject.js"      : (PYTHON_DIR / "escrs_inject.js").exists(),
         "escrs_connector.py"   : (PYTHON_DIR / "escrs_connector.py").exists(),
+        "pywin32"              : _check_pywin32(),
     }
 
     tous_ok = True

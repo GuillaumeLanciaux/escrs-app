@@ -1,9 +1,33 @@
-# Dependencies for ESCRS-APP Python components
-pyodbc
-pdfplumber
-pandas
-pytesseract
-opencv-python-headless
-numpy
+# ─────────────────────────────────────────────────────────────────────────────
+# requirements.txt — Dépendances Python pour le projet ESCRS IOL Calculator
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# Installation :
+#   pip install -r requirements.txt
+#
+# Prérequis système :
+#   - Python 3.11+
+#   - Microsoft Access Database Engine 2016 (pour pyodbc + .mdb)
+#     https://www.microsoft.com/en-us/download/details.aspx?id=54920
+#   - Tesseract OCR (pour pachymetry_ocr.py)
+#     https://github.com/UB-Mannheim/tesseract/wiki
+# ─────────────────────────────────────────────────────────────────────────────
 
-# tesseract (binary) should be installed separately on the system
+# Lecture des bases de données Access (.mdb)
+pyodbc>=5.1.0
+
+# Manipulation de données tabulaires
+pandas>=2.2.0
+
+# Extraction de texte depuis les PDFs (biométrie Zeiss IOLMaster)
+pdfplumber>=0.11.0
+
+# OCR pour les images pachymétrie Optovue
+pytesseract>=0.3.10
+opencv-python-headless>=4.9.0
+
+# Traitement d'images
+numpy>=1.26.0
+
+# Détection automatique du patient actif dans Microsoft Access (Windows uniquement)
+pywin32>=306
