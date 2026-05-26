@@ -22,14 +22,62 @@ import pytesseract
 import numpy as np
 import json
 import sys
+import shutil
+from pathlib import Path
 from collections import Counter
 
-# ─── Windows uniquement ───────────────────────────────────────────────────────
-# Décommenter si tesseract n'est pas dans le PATH :
-pytesseract.pytesseract.tesseract_cmd = r"C:\Stage\database\test\escrs-app\tesseract\tesseract.exe"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Détection automatique de Tesseract
 # ─────────────────────────────────────────────────────────────────────────────
 
-# ─── Zones calibrées (ratios x1,y1,x2,y2 relatifs à la taille image) ─────────
+def _find_tesseract() -> str:
+    """
+    Cherche tesseract.exe dans les emplacements connus, par ordre de priorité :
+      1. Dossier vendor/ embarqué dans le projet
+      2. AlmaPro
+      3. Installation standard Tesseract-OCR
+      4. PATH système
+    """
+    chemins = [
+        # Tesseract embarqué dans le projet (priorité maximale)
+        Path(__file__).parent.parent / "vendor" / "tesseract" / "tesseract.exe",
+        # AlmaPro
+        Path(r"C:\almapro\tesseract\tesseract.exe"),
+        Path(r"C:\AlmaPro\tesseract\tesseract.exe"),
+        Path(r"C:\Program Files\AlmaPro\tesseract\tesseract.exe"),
+        # Chemin manuel projet
+        Path(r"C:\Stage\database\test\tesseract\tesseract.exe"),
+        # Installation standard Windows
+        Path(r"C:\Program Files\Tesseract-OCR\tesseract.exe"),
+        Path(r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe"),
+        # AppData utilisateur
+        Path.home() / "AppData" / "Local" / "Programs" / "Tesseract-OCR" / "tesseract.exe",
+    ]
+
+    for chemin in chemins:
+        if chemin.exists():
+            print(f"  ✓ Tesseract : {chemin}", file=sys.stderr)
+            return str(chemin)
+
+    # Dernier recours : PATH système (peut être celui d'AlmaPro)
+    system = shutil.which("tesseract")
+    if system:
+        print(f"  ✓ Tesseract (PATH) : {system}", file=sys.stderr)
+        return system
+
+    raise FileNotFoundError(
+        "Tesseract introuvable. Vérifier l'installation.\n"
+        "Chemins vérifiés :\n" + "\n".join(f"  - {c}" for c in chemins)
+    )
+
+
+pytesseract.pytesseract.tesseract_cmd = _find_tesseract()
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Zones calibrées (ratios x1,y1,x2,y2 relatifs à la taille image)
+# ─────────────────────────────────────────────────────────────────────────────
+
 ZONES = {
     "ou_report": {
         "OD": (0.157, 0.252, 0.232, 0.330),
@@ -42,8 +90,11 @@ ZONES = {
         "OS": (0.376, 0.612, 0.464, 0.709),
     },
 }
-# ─────────────────────────────────────────────────────────────────────────────
 
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Détection du type de rapport
+# ─────────────────────────────────────────────────────────────────────────────
 
 def detecter_type_rapport(img):
     """
@@ -68,6 +119,10 @@ def detecter_type_rapport(img):
         return "single_OD"
     return "single_OS"
 
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Extraction OCR d'une zone
+# ─────────────────────────────────────────────────────────────────────────────
 
 def ocr_zone_centrale(img, zone_ratio, label, debug=False):
     """
@@ -124,6 +179,10 @@ def ocr_zone_centrale(img, zone_ratio, label, debug=False):
     }
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Point d'entrée principal
+# ─────────────────────────────────────────────────────────────────────────────
+
 def extraire_pachymetrie(chemin_image, debug=False):
     img = cv2.imread(chemin_image)
     if img is None:
@@ -162,6 +221,10 @@ def extraire_pachymetrie(chemin_image, debug=False):
         "norme_indicative_500_570µm": norme,
     }
 
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CLI
+# ─────────────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     debug = "--debug" in sys.argv
