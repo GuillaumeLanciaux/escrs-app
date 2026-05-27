@@ -2,7 +2,7 @@
  * main.ts — Processus principal Electron
  */
 
-import { app, BrowserWindow, ipcMain, dialog } from 'electron';
+import { app, BrowserWindow, ipcMain, dialog , shell} from 'electron';
 import { spawn }  from 'child_process';
 import * as path  from 'path';
 import * as fs    from 'fs';
@@ -216,7 +216,10 @@ ipcMain.handle('get-active-patient', async () => {
     return { success: false, patient: { code: null }, error: String(err) };
   }
 });
-
+ipcMain.handle('ouvrir-guide', () => {
+  const guidePath = path.join(__dirname, '..', 'src', 'renderer', 'guide_escrs.html');
+  shell.openPath(guidePath);
+});
 /** Calcul ESCRS principal — inchangé. */
 ipcMain.handle('calculer-escrs', async (_event, params: Record<string, unknown>) => {
   try {

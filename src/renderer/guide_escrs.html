@@ -1,0 +1,1312 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Guide pratique — Calculateur ESCRS</title>
+<style>
+  @page {
+    size: A4;
+    margin: 14mm 14mm 16mm 14mm;
+    @bottom-center {
+      content: "Guide pratique — Calculateur ESCRS  ·  page " counter(page) " / " counter(pages);
+      font-family: 'Helvetica', sans-serif;
+      font-size: 8pt;
+      color: #6b7280;
+    }
+  }
+  @page :first {
+    margin: 0;
+    @bottom-center { content: ""; }
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #0f172a;
+    --ink-soft: #334155;
+    --muted: #64748b;
+    --line: #e2e8f0;
+    --bg: #f8fafc;
+    --primary: #0c4a6e;
+    --primary-soft: #e0f2fe;
+    --accent: #0891b2;
+    --warn: #b45309;
+    --warn-soft: #fef3c7;
+    --good: #15803d;
+    --good-soft: #dcfce7;
+    --bad: #b91c1c;
+    --bad-soft: #fee2e2;
+  }
+
+  body {
+    font-family: 'Helvetica', 'Arial', sans-serif;
+    color: var(--ink);
+    font-size: 9pt;
+    line-height: 1.4;
+  }
+
+  /* ============ COVER ============ */
+  .cover {
+    page-break-after: always;
+    height: 297mm;
+    width: 210mm;
+    background: linear-gradient(135deg, #0c4a6e 0%, #0891b2 100%);
+    color: white;
+    padding: 30mm 22mm;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover::before {
+    content: "";
+    position: absolute;
+    right: -80mm; top: -80mm;
+    width: 220mm; height: 220mm;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+  }
+  .cover::after {
+    content: "";
+    position: absolute;
+    right: -40mm; bottom: -80mm;
+    width: 160mm; height: 160mm;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.04);
+  }
+  .cover-eyebrow {
+    font-size: 10pt;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    opacity: 0.85;
+    margin-bottom: 18mm;
+    font-weight: 600;
+    position: relative;
+  }
+  .cover-title {
+    font-size: 38pt;
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -1px;
+    margin-bottom: 8mm;
+    position: relative;
+  }
+  .cover-title em { font-style: italic; font-weight: 300; }
+  .cover-sub {
+    font-size: 14pt;
+    font-weight: 300;
+    opacity: 0.95;
+    max-width: 130mm;
+    line-height: 1.4;
+    position: relative;
+  }
+  .cover-tags {
+    margin-top: 16mm;
+    position: relative;
+  }
+  .cover-tag {
+    display: inline-block;
+    background: rgba(255,255,255,0.18);
+    padding: 2.5mm 5mm;
+    border-radius: 30px;
+    font-size: 9pt;
+    font-weight: 500;
+    border: 1px solid rgba(255,255,255,0.25);
+    margin: 0 2mm 2mm 0;
+  }
+  .cover-bottom {
+    position: absolute;
+    bottom: 22mm; left: 22mm; right: 22mm;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    font-size: 9pt;
+    opacity: 0.9;
+  }
+  .cover-url {
+    font-family: 'Courier New', monospace;
+    background: rgba(255,255,255,0.15);
+    padding: 2mm 4mm;
+    border-radius: 4px;
+    font-size: 10pt;
+  }
+  .cover-preview {
+    position: absolute;
+    bottom: 48mm; left: 22mm; right: 22mm;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 8px;
+    padding: 5mm 7mm;
+  }
+  .cover-preview h3 {
+    font-size: 9pt;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 3mm;
+    opacity: 0.85;
+  }
+  .cover-preview-table {
+    width: 100%;
+    font-size: 9.5pt;
+  }
+  .cover-preview-table td {
+    padding: 1mm 0;
+    width: 50%;
+  }
+  .cover-preview-table td::before {
+    content: "→  ";
+    opacity: 0.6;
+  }
+
+  /* ============ PAGE ============ */
+  .page {
+    page-break-after: always;
+  }
+  .page:last-child { page-break-after: auto; }
+
+  .page-header {
+    border-bottom: 2px solid var(--primary);
+    padding-bottom: 3mm;
+    margin-bottom: 5mm;
+    width: 100%;
+  }
+  .page-header-table { width: 100%; }
+  .page-header-table td { vertical-align: bottom; }
+  .page-header-table td:last-child { text-align: right; }
+  .page-num {
+    display: inline-block;
+    background: var(--primary);
+    color: white;
+    padding: 1mm 3mm;
+    font-size: 8pt;
+    letter-spacing: 2px;
+    font-weight: 700;
+    border-radius: 3px;
+  }
+  h1.section-title {
+    font-size: 17pt;
+    color: var(--primary);
+    font-weight: 800;
+    letter-spacing: -0.3px;
+    line-height: 1.1;
+  }
+  .section-kicker {
+    color: var(--muted);
+    font-size: 8.5pt;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: 600;
+    margin-bottom: 1mm;
+  }
+
+  h2 {
+    font-size: 11pt;
+    color: var(--primary);
+    margin: 3mm 0 1.5mm 0;
+    font-weight: 700;
+  }
+  h3 {
+    font-size: 9.5pt;
+    color: var(--ink);
+    font-weight: 700;
+    margin: 2mm 0 1mm 0;
+  }
+  p { margin-bottom: 2mm; }
+
+  /* ============ TL;DR ============ */
+  .tldr {
+    background: var(--primary-soft);
+    border-left: 4px solid var(--primary);
+    padding: 4mm 5mm;
+    border-radius: 4px;
+    margin-bottom: 4mm;
+  }
+  .tldr-label {
+    font-size: 7.5pt;
+    color: var(--primary);
+    font-weight: 800;
+    letter-spacing: 3px;
+    margin-bottom: 1.5mm;
+  }
+  .tldr p { font-size: 9.5pt; line-height: 1.45; margin: 0; }
+
+  /* ============ STATS - TABLE BASED ============ */
+  .stats-table {
+    width: 100%;
+    border-spacing: 3mm 0;
+    margin: 3mm 0 5mm -3mm;
+  }
+  .stats-table td {
+    background: white;
+    border: 1px solid var(--line);
+    border-top: 3px solid var(--accent);
+    padding: 4mm 2mm;
+    border-radius: 4px;
+    text-align: center;
+    width: 25%;
+    vertical-align: top;
+  }
+  .stat-num {
+    font-size: 22pt;
+    font-weight: 800;
+    color: var(--primary);
+    line-height: 1;
+    margin-bottom: 1.5mm;
+    display: block;
+  }
+  .stat-label {
+    font-size: 7.5pt;
+    color: var(--muted);
+    line-height: 1.3;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    font-weight: 600;
+  }
+
+  /* ============ WHY CARDS - TABLE BASED ============ */
+  .why-table {
+    width: 100%;
+    border-spacing: 3mm 3mm;
+    margin: -3mm 0 0 -3mm;
+  }
+  .why-table td {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 4mm 5mm;
+    width: 33.33%;
+    vertical-align: top;
+    position: relative;
+  }
+  .why-num {
+    color: var(--primary-soft);
+    font-size: 26pt;
+    font-weight: 800;
+    line-height: 1;
+    float: right;
+    margin-top: -2mm;
+  }
+  .why-table h3 {
+    font-size: 10pt;
+    color: var(--primary);
+    margin: 0 0 2mm 0;
+  }
+  .why-table p {
+    font-size: 8.5pt;
+    color: var(--ink-soft);
+    line-height: 1.4;
+    margin: 0;
+  }
+
+  /* ============ MAIN TABLE ============ */
+  table.data {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 2mm 0 3mm 0;
+    font-size: 8.7pt;
+  }
+  table.data th {
+    background: var(--primary);
+    color: white;
+    text-align: left;
+    padding: 2mm 3mm;
+    font-weight: 700;
+    font-size: 8.3pt;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  table.data th:not(:last-child) {
+    border-right: 1px solid rgba(255,255,255,0.15);
+  }
+  table.data td {
+    padding: 1.7mm 3mm;
+    border-bottom: 1px solid var(--line);
+    vertical-align: middle;
+  }
+  table.data tr:nth-child(even) td {
+    background: #fafbfc;
+  }
+  table.data .center { text-align: center; }
+
+  .pill {
+    display: inline-block;
+    padding: 0.6mm 2.3mm;
+    border-radius: 20px;
+    font-size: 7.3pt;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    white-space: nowrap;
+  }
+  .pill.good { background: var(--good-soft); color: var(--good); }
+  .pill.warn { background: var(--warn-soft); color: var(--warn); }
+  .pill.bad { background: var(--bad-soft); color: var(--bad); }
+  .pill.neutral { background: #e2e8f0; color: var(--ink-soft); }
+  .pill.primary { background: var(--primary-soft); color: var(--primary); }
+
+  /* ============ RECOMMENDATION ROW ============ */
+  .reco-table {
+    width: 100%;
+    border-spacing: 3mm 0;
+    margin: 2mm 0 0 -3mm;
+  }
+  .reco-table td {
+    width: 33.33%;
+    vertical-align: top;
+    border-radius: 5px;
+    padding: 3mm 4mm;
+    font-size: 8.5pt;
+    border-left: 4px solid;
+  }
+  .reco-table td.r-good { background: var(--good-soft); border-color: var(--good); color: #14532d; }
+  .reco-table td.r-warn { background: var(--warn-soft); border-color: var(--warn); color: #78350f; }
+  .reco-table td.r-info { background: var(--primary-soft); border-color: var(--primary); color: #075985; }
+  .reco-table .r-title {
+    font-size: 8pt;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 800;
+    margin-bottom: 1.5mm;
+    display: block;
+  }
+  .reco-table strong { color: inherit; }
+
+  /* ============ DECISION TREE ============ */
+  .tree-table {
+    width: 100%;
+    background: var(--bg);
+    border-radius: 6px;
+    padding: 2.5mm;
+    border-collapse: separate;
+    border-spacing: 0 1.2mm;
+  }
+  .tree-table td {
+    vertical-align: middle;
+    padding: 1.8mm 3mm;
+    font-size: 8.3pt;
+  }
+  .tree-cond {
+    background: white;
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--accent);
+    border-radius: 3px;
+    width: 32%;
+  }
+  .tree-cond strong { color: var(--primary); display: block; font-size: 9.2pt; }
+  .tree-cond span.crit { color: var(--muted); font-size: 8pt; }
+  .tree-arr {
+    width: 6mm;
+    color: var(--accent);
+    font-weight: 800;
+    font-size: 13pt;
+    text-align: center;
+  }
+  .tree-res {
+    background: var(--primary);
+    color: white;
+    border-radius: 3px;
+  }
+  .tree-res strong { display: block; font-size: 9.5pt; margin-bottom: 0.5mm; }
+  .tree-res small { opacity: 0.85; font-size: 7.8pt; }
+
+  /* ============ CASE CARDS - TABLE BASED ============ */
+  .cases-table {
+    width: 100%;
+    border-spacing: 4mm 4mm;
+    margin: -4mm 0 0 -4mm;
+  }
+  .cases-table > tbody > tr > td {
+    width: 50%;
+    vertical-align: top;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 0;
+    overflow: hidden;
+    background: white;
+  }
+  .case-head {
+    background: var(--primary);
+    color: white;
+    padding: 2.5mm 4mm;
+    font-size: 9.5pt;
+    font-weight: 700;
+    display: block;
+    width: 100%;
+  }
+  .case-head .case-tag {
+    font-size: 7.3pt;
+    background: rgba(255,255,255,0.2);
+    padding: 0.5mm 2mm;
+    border-radius: 3px;
+    font-weight: 600;
+    float: right;
+    margin-top: 0.3mm;
+  }
+  .case-body {
+    padding: 1.5mm 4mm 2.5mm;
+  }
+  .case-body table { width: 100%; font-size: 8pt; }
+  .case-body table td {
+    padding: 1mm 0;
+    vertical-align: top;
+    border-bottom: 1px dotted var(--line);
+  }
+  .case-body table tr:last-child td { border-bottom: none; }
+  .case-body table td:first-child {
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 7.5pt;
+    text-transform: uppercase;
+    letter-spacing: 0.2px;
+    width: 23mm;
+    padding-right: 2mm;
+  }
+  .case-body table td strong { color: var(--primary); }
+
+  /* ============ FORMULA CARDS - TABLE BASED ============ */
+  .formulas-table {
+    width: 100%;
+    border-spacing: 4mm 4mm;
+    margin: 0 0 0 -4mm;
+  }
+  .formulas-table > tbody > tr > td {
+    width: 50%;
+    vertical-align: top;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 3mm 4mm;
+  }
+  .fc-head { 
+    display: block;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 1.5mm;
+    margin-bottom: 2mm;
+  }
+  .fc-name {
+    font-size: 11pt;
+    color: var(--primary);
+    font-weight: 800;
+    display: block;
+  }
+  .fc-type {
+    font-size: 7.2pt;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    font-weight: 600;
+    display: block;
+    margin-top: 0.5mm;
+  }
+  .fc-desc {
+    font-size: 8.2pt;
+    color: var(--ink-soft);
+    line-height: 1.4;
+    margin-bottom: 2mm;
+  }
+  .fc-meta-table { width: 100%; font-size: 7.5pt; }
+  .fc-meta-table td {
+    background: var(--bg);
+    padding: 1.5mm 2.5mm;
+    border-radius: 3px;
+    width: 50%;
+    vertical-align: top;
+  }
+  .fc-meta-label {
+    font-size: 6.8pt;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    font-weight: 700;
+    display: block;
+    margin-bottom: 0.3mm;
+  }
+  .fc-meta-val { color: var(--ink); font-weight: 600; font-size: 8pt;}
+
+  /* ============ SCALE BARS ============ */
+  .scale-wrap {
+    background: var(--bg);
+    padding: 3mm 5mm;
+    border-radius: 6px;
+    margin-bottom: 3mm;
+  }
+  .scale-caption {
+    font-size: 7.3pt;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 1.5mm;
+    font-weight: 700;
+  }
+  .scale-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .scale-table td {
+    padding: 0.8mm 0;
+    vertical-align: middle;
+  }
+  .scale-table td:first-child {
+    width: 38mm;
+    padding-right: 3mm;
+  }
+  .scale-name {
+    font-weight: 700;
+    color: var(--primary);
+    font-size: 8.3pt;
+  }
+  .scale-name small {
+    display: block;
+    color: var(--muted);
+    font-weight: 400;
+    font-size: 6.8pt;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .scale-bar-outer {
+    height: 4.2mm;
+    background: var(--line);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .scale-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--primary));
+    border-radius: 3px;
+    color: white;
+    font-size: 7pt;
+    font-weight: 700;
+    text-align: right;
+    padding: 0.7mm 2mm 0 0;
+  }
+  .scale-fill.old {
+    background: linear-gradient(90deg, #cbd5e1, #94a3b8);
+    color: #1e293b;
+  }
+  .scale-sep td { border-top: 1px dashed var(--line); padding-top: 2mm; padding-bottom: 0; }
+
+  /* ============ STEPS ============ */
+  .steps-table {
+    width: 100%;
+    border-spacing: 3mm 0;
+    margin: 2mm 0 4mm -3mm;
+  }
+  .steps-table td {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 3.5mm;
+    width: 25%;
+    vertical-align: top;
+  }
+  .step-num {
+    width: 7mm; height: 7mm;
+    background: var(--primary);
+    color: white;
+    border-radius: 50%;
+    display: inline-block;
+    text-align: center;
+    line-height: 7mm;
+    font-weight: 800;
+    font-size: 10pt;
+    margin-bottom: 2mm;
+  }
+  .step-title {
+    font-size: 9pt;
+    color: var(--primary);
+    font-weight: 700;
+    margin-bottom: 1mm;
+  }
+  .step-body {
+    font-size: 8pt;
+    color: var(--ink-soft);
+    line-height: 1.35;
+  }
+
+  /* ============ CALLOUTS ============ */
+  .callout {
+    padding: 2.5mm 4mm;
+    border-radius: 5px;
+    margin: 2.5mm 0;
+    font-size: 8.5pt;
+    border-left: 4px solid;
+  }
+  .callout.warn { background: var(--warn-soft); border-color: var(--warn); color: #78350f; }
+  .callout.good { background: var(--good-soft); border-color: var(--good); color: #14532d; }
+  .callout.info { background: var(--primary-soft); border-color: var(--primary); color: #075985; }
+  .callout strong:first-child { display: block; font-size: 8pt; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.8mm; }
+
+  .errors-table {
+    width: 100%;
+    border-spacing: 3mm 3mm;
+    margin: -3mm 0 0 -3mm;
+  }
+  .errors-table td {
+    width: 50%;
+    vertical-align: top;
+    background: var(--warn-soft);
+    border-left: 4px solid var(--warn);
+    border-radius: 5px;
+    padding: 3mm 4mm;
+    font-size: 8.3pt;
+    color: #78350f;
+    line-height: 1.4;
+  }
+  .errors-table td strong {
+    display: block;
+    font-size: 7.8pt;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 1mm;
+  }
+
+  /* ============ FOOTER REFS ============ */
+  .footer-refs {
+    margin-top: 3mm;
+    padding-top: 2mm;
+    border-top: 1px solid var(--line);
+    font-size: 7.2pt;
+    color: var(--muted);
+    line-height: 1.35;
+  }
+  .footer-refs strong { color: var(--ink-soft); }
+
+  /* utility */
+  .check-yes { color: var(--good); font-weight: 800; }
+  .check-no { color: var(--bad); font-weight: 800; }
+</style>
+</head>
+<body>
+
+<!-- ============================================================ -->
+<!-- PAGE 1 — COVER                                                -->
+<!-- ============================================================ -->
+<div class="cover">
+  <div class="cover-eyebrow">Guide pratique · 2026</div>
+  <div class="cover-title">
+    Calculateur<br>
+    <em>ESCRS</em><br>
+    Mode d'emploi.
+  </div>
+  <div class="cover-sub">
+    7 formules modernes, 1 saisie unique.<br>
+    Tout ce qu'il faut savoir pour l'intégrer<br>
+    à votre pratique dès demain.
+  </div>
+
+  <div class="cover-tags">
+    <span class="cover-tag">Barrett Universal II</span>
+    <span class="cover-tag">Kane</span>
+    <span class="cover-tag">EVO 2.0</span>
+    <span class="cover-tag">Hoffer QST</span>
+    <span class="cover-tag">PEARL-DGS</span>
+    <span class="cover-tag">Cooke K6</span>
+    <span class="cover-tag">Hill-RBF 3.0</span>
+  </div>
+
+  <div class="cover-preview">
+    <h3>Ce que vous trouverez dans ce guide</h3>
+    <table class="cover-preview-table">
+      <tr>
+        <td>Tableau "quelle formule pour quel œil"</td>
+        <td>Arbre décisionnel cas par cas</td>
+      </tr>
+      <tr>
+        <td>Yeux courts, longs, post-LASIK, kératocône</td>
+        <td>Comparaison vs formules classiques</td>
+      </tr>
+      <tr>
+        <td>Fiches synthétiques des 7 formules</td>
+        <td>Utilisation pratique en 4 étapes</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="cover-bottom">
+    <div>Pour ophtalmologues — chirurgie de la cataracte &amp; réfractive</div>
+    <div class="cover-url">iolcalculator.escrs.org</div>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- PAGE 2 — POURQUOI L'UTILISER                                  -->
+<!-- ============================================================ -->
+<div class="page">
+  <div class="page-header">
+    <table class="page-header-table"><tr>
+      <td>
+        <div class="section-kicker">En 30 secondes</div>
+        <h1 class="section-title">Pourquoi utiliser le calculateur ESCRS ?</h1>
+      </td>
+      <td><span class="page-num">01</span></td>
+    </tr></table>
+  </div>
+
+  <div class="tldr">
+    <div class="tldr-label">L'ESSENTIEL</div>
+    <p>L'ESCRS a créé un <strong>agrégateur gratuit en ligne</strong> qui interroge simultanément les 7 formules de calcul d'IOL les plus précises actuellement publiées. Vous saisissez les biométries une seule fois et obtenez les résultats côte à côte — fini les onglets multiples, les ressaisies, les erreurs de transcription. Les formules incluses surclassent significativement les anciennes (SRK/T, Hoffer Q, Holladay 1) sur la précision réfractive.</p>
+  </div>
+
+  <table class="stats-table"><tr>
+    <td>
+      <span class="stat-num">7</span>
+      <span class="stat-label">Formules modernes interrogées en parallèle</span>
+    </td>
+    <td>
+      <span class="stat-num">1</span>
+      <span class="stat-label">Saisie unique des biométries</span>
+    </td>
+    <td>
+      <span class="stat-num">0 €</span>
+      <span class="stat-label">Gratuit, sans inscription obligatoire</span>
+    </td>
+    <td>
+      <span class="stat-num">~80%</span>
+      <span class="stat-label">d'yeux à ±0,5 D avec les meilleures formules</span>
+    </td>
+  </tr></table>
+
+  <h2>Les 6 bénéfices concrets pour votre pratique</h2>
+
+  <table class="why-table">
+    <tr>
+      <td>
+        <div class="why-num">1</div>
+        <h3>Gain de temps</h3>
+        <p>Une seule entrée de données → 7 résultats simultanés. Plus besoin de jongler entre les sites Barrett, Kane, Hill-RBF un par un.</p>
+      </td>
+      <td>
+        <div class="why-num">2</div>
+        <h3>Moins d'erreurs</h3>
+        <p>Une seule saisie élimine les fautes de frappe et les confusions K1/K2 entre les différents calculateurs.</p>
+      </td>
+      <td>
+        <div class="why-num">3</div>
+        <h3>Toujours à jour</h3>
+        <p>Le site interroge en temps réel les formules officielles. Si une formule est mise à jour, vous bénéficiez automatiquement de la dernière version.</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <div class="why-num">4</div>
+        <h3>Aide à la décision</h3>
+        <p>La comparaison côte à côte met en évidence les discordances et signale les cas où il faut investiguer (œil atypique, biométrie douteuse).</p>
+      </td>
+      <td>
+        <div class="why-num">5</div>
+        <h3>Constantes optimisées</h3>
+        <p>Base d'IOL avec constantes optimisées par modèle (issues d'IOLCon), évitant le travail manuel de personnalisation.</p>
+      </td>
+      <td>
+        <div class="why-num">6</div>
+        <h3>Modules dédiés</h3>
+        <p>Versions toriques et post-chirurgie réfractive disponibles, indispensables pour les cas complexes.</p>
+      </td>
+    </tr>
+  </table>
+
+  <div class="callout info">
+    <strong>Bon à savoir</strong>
+    L'ESCRS ne calcule pas elle-même : elle interroge les sites officiels des formules (Barrett, Kane, etc.) via du <em>web scraping</em> autorisé par les auteurs. Vous obtenez donc la version authentique de chaque formule, jamais une approximation.
+  </div>
+
+  <div class="footer-refs">
+    <strong>Disponibilité :</strong> iolcalculator.escrs.org &nbsp;·&nbsp;
+    <strong>Formules :</strong> Barrett Universal II, Cooke K6, EVO 2.0, Hill-RBF 3.0, Hoffer QST, Kane, PEARL-DGS &nbsp;·&nbsp;
+    <strong>Modules :</strong> standard, torique, post-réfractif.
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- PAGE 3 — TABLEAU "QUELLE FORMULE POUR QUEL ŒIL ?"            -->
+<!-- ============================================================ -->
+<div class="page">
+  <div class="page-header">
+    <table class="page-header-table"><tr>
+      <td>
+        <div class="section-kicker">Référence pratique</div>
+        <h1 class="section-title">Quelle formule pour quel œil ?</h1>
+      </td>
+      <td><span class="page-num">02</span></td>
+    </tr></table>
+  </div>
+
+  <div class="tldr">
+    <div class="tldr-label">À RETENIR</div>
+    <p>Toutes les formules de l'ESCRS sont <strong>excellentes en œil normal</strong>. Les différences apparaissent aux <strong>extrêmes</strong> : œil court, œil long, post-réfractif, kératocône. Le calculateur permet précisément de croiser plusieurs formules dans ces situations à risque.</p>
+  </div>
+
+  <h2>Performances par profil oculaire</h2>
+
+  <table class="data">
+    <thead>
+      <tr>
+        <th style="width: 22%;">Formule</th>
+        <th class="center">Œil normal<br><span style="font-weight:400; text-transform:none;">22,0–25,0 mm</span></th>
+        <th class="center">Œil court<br><span style="font-weight:400; text-transform:none;">&lt; 22,0 mm</span></th>
+        <th class="center">Œil long<br><span style="font-weight:400; text-transform:none;">&gt; 25,0 mm</span></th>
+        <th class="center">Post-LASIK<br><span style="font-weight:400; text-transform:none;">myopique</span></th>
+        <th class="center">Kérato-<br>cône</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Barrett Universal II</strong></td>
+        <td class="center"><span class="pill good">Excellent</span></td>
+        <td class="center"><span class="pill good">Bon</span></td>
+        <td class="center"><span class="pill good">Excellent</span></td>
+        <td class="center"><span class="pill good">True-K</span></td>
+        <td class="center"><span class="pill good">True-K KCN</span></td>
+      </tr>
+      <tr>
+        <td><strong>Kane</strong></td>
+        <td class="center"><span class="pill good">Excellent</span></td>
+        <td class="center"><span class="pill good">Excellent</span></td>
+        <td class="center"><span class="pill good">Excellent</span></td>
+        <td class="center"><span class="pill good">Oui</span></td>
+        <td class="center"><span class="pill good">Kane KCN</span></td>
+      </tr>
+      <tr>
+        <td><strong>EVO 2.0</strong></td>
+        <td class="center"><span class="pill good">Excellent</span></td>
+        <td class="center"><span class="pill warn">Variable</span></td>
+        <td class="center"><span class="pill warn">Variable</span></td>
+        <td class="center"><span class="pill good">Oui (PK)</span></td>
+        <td class="center"><span class="pill good">Oui</span></td>
+      </tr>
+      <tr>
+        <td><strong>Hoffer QST</strong></td>
+        <td class="center"><span class="pill good">Excellent</span></td>
+        <td class="center"><span class="pill good">Bon</span></td>
+        <td class="center"><span class="pill good">Bon</span></td>
+        <td class="center"><span class="pill good">Oui</span></td>
+        <td class="center"><span class="pill neutral">—</span></td>
+      </tr>
+      <tr>
+        <td><strong>PEARL-DGS</strong></td>
+        <td class="center"><span class="pill good">Excellent</span></td>
+        <td class="center"><span class="pill good">Excellent</span></td>
+        <td class="center"><span class="pill good">Excellent</span></td>
+        <td class="center"><span class="pill good">Oui (PK)</span></td>
+        <td class="center"><span class="pill neutral">—</span></td>
+      </tr>
+      <tr>
+        <td><strong>Cooke K6</strong></td>
+        <td class="center"><span class="pill good">Excellent</span></td>
+        <td class="center"><span class="pill good">Excellent</span></td>
+        <td class="center"><span class="pill good">Bon</span></td>
+        <td class="center"><span class="pill good">Oui (TK)</span></td>
+        <td class="center"><span class="pill neutral">—</span></td>
+      </tr>
+      <tr>
+        <td><strong>Hill-RBF 3.0</strong></td>
+        <td class="center"><span class="pill good">Excellent</span></td>
+        <td class="center"><span class="pill warn">Limites</span></td>
+        <td class="center"><span class="pill good">Bon</span></td>
+        <td class="center"><span class="pill neutral">—</span></td>
+        <td class="center"><span class="pill neutral">—</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p style="font-size: 7.3pt; color: var(--muted); margin-top: -2mm;">
+    <strong>Légende :</strong>
+    <span class="pill good">Excellent</span> performance de premier rang documentée &nbsp;·&nbsp;
+    <span class="pill good">Bon</span> performant en routine &nbsp;·&nbsp;
+    <span class="pill warn">Variable</span> précision moindre aux extrêmes &nbsp;·&nbsp;
+    <span class="pill neutral">—</span> pas d'indication spécifique.
+    PK = posterior keratometry · TK = total keratometry · KCN = keratoconus.
+  </p>
+
+  <h2 style="margin-top: 4mm;">Recommandation pragmatique pour la pratique quotidienne</h2>
+
+  <table class="reco-table"><tr>
+    <td class="r-good">
+      <span class="r-title">Œil "standard"</span>
+      Croisez 2 formules : <strong>Barrett + Kane</strong>. Si elles concordent à 0,25 D près → confiance élevée, choisissez celle qui vous est familière.
+    </td>
+    <td class="r-warn">
+      <span class="r-title">Œil atypique</span>
+      Croisez <strong>≥ 3 formules</strong>. Si discordance &gt; 0,50 D → vérifiez la biométrie et privilégiez la formule adaptée au profil (voir page suivante).
+    </td>
+    <td class="r-info">
+      <span class="r-title">Cas complexe</span>
+      Post-réfractif ou kératocône → utilisez les <strong>modules dédiés</strong> et les formules spécifiques (True-K, Kane KCN). Information éclairée du patient.
+    </td>
+  </tr></table>
+
+  <div class="footer-refs">
+    <strong>Sources :</strong> ESCRS IOL Calculator Accuracy (EuroTimes) · Tonk et al. 2023 (kératocône) · Kane Formula clinical studies · Review of Ophthalmology 2024–2026.
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- PAGE 4 — CAS PARTICULIERS                                     -->
+<!-- ============================================================ -->
+<div class="page">
+  <div class="page-header">
+    <table class="page-header-table"><tr>
+      <td>
+        <div class="section-kicker">Cas par cas</div>
+        <h1 class="section-title">Yeux courts, longs, post-LASIK, kératocône</h1>
+      </td>
+      <td><span class="page-num">03</span></td>
+    </tr></table>
+  </div>
+
+  <p style="margin-bottom: 3mm; font-size: 9pt;">C'est précisément dans ces situations que le calculateur ESCRS prend tout son sens : il permet de comparer rapidement les formules dédiées et d'identifier les discordances qui doivent alerter avant de poser un implant.</p>
+
+  <h2 style="margin-top: 2mm;">Arbre décisionnel rapide</h2>
+
+  <table class="tree-table">
+    <tr>
+      <td class="tree-cond">
+        <strong>Œil court</strong>
+        <span class="crit">AL &lt; 22,0 mm (très court : &lt; 21,0)</span>
+      </td>
+      <td class="tree-arr">→</td>
+      <td class="tree-res">
+        <strong>Kane · Cooke K6 · PEARL-DGS · Hoffer QST</strong>
+        <small>Croiser 3 formules — les écarts y sont les plus grands. Zeiss-AI/Barrett en alternative.</small>
+      </td>
+    </tr>
+    <tr>
+      <td class="tree-cond">
+        <strong>Œil long</strong>
+        <span class="crit">AL &gt; 25,0 mm (très long : &gt; 26,0)</span>
+      </td>
+      <td class="tree-arr">→</td>
+      <td class="tree-res">
+        <strong>Kane · Barrett Universal II · PEARL-DGS · Hill-RBF 3.0</strong>
+        <small>Kane a démontré ~25 % de réduction d'erreur vs SRK/T dans les yeux ≥ 26 mm.</small>
+      </td>
+    </tr>
+    <tr>
+      <td class="tree-cond">
+        <strong>Post-LASIK myopique</strong>
+        <span class="crit">Module post-réfractif ESCRS</span>
+      </td>
+      <td class="tree-arr">→</td>
+      <td class="tree-res">
+        <strong>Barrett True-K (TK si dispo) · EVO 2.0 (PK) · PEARL-DGS (PK)</strong>
+        <small>Si TK indisponible : Barrett True-K No-History reste très performant.</small>
+      </td>
+    </tr>
+    <tr>
+      <td class="tree-cond">
+        <strong>Post-LASIK hypermétropique</strong>
+        <span class="crit">Module post-réfractif ESCRS</span>
+      </td>
+      <td class="tree-arr">→</td>
+      <td class="tree-res">
+        <strong>Barrett True-K · EVO 2.0 · Cooke K6 (TK)</strong>
+        <small>Données moins robustes que post-myopique — informer le patient.</small>
+      </td>
+    </tr>
+    <tr>
+      <td class="tree-cond">
+        <strong>Kératocône — K max &lt; 50 D</strong>
+        <span class="crit">Formes modérées</span>
+      </td>
+      <td class="tree-arr">→</td>
+      <td class="tree-res">
+        <strong>Barrett True-K KCN (TK) · Kane KCN</strong>
+        <small>~70 % à ±0,5 D. La TK améliore significativement la précision.</small>
+      </td>
+    </tr>
+    <tr>
+      <td class="tree-cond">
+        <strong>Kératocône — K max ≥ 50 D</strong>
+        <span class="crit">Formes sévères</span>
+      </td>
+      <td class="tree-arr">→</td>
+      <td class="tree-res">
+        <strong>Kane KCN · Barrett True-K KCN — précision &lt; 20 % à ±0,5 D</strong>
+        <small>Aucune formule fiable. Viser la myopie légère. Information éclairée indispensable.</small>
+      </td>
+    </tr>
+  </table>
+
+  <h2>Détail par cas particulier</h2>
+
+  <table class="cases-table">
+    <tr>
+      <td>
+        <div class="case-head">Œil court (AL &lt; 22 mm) <span class="case-tag">Difficile</span></div>
+        <div class="case-body">
+          <table>
+            <tr><td>Pourquoi</td><td>Erreur de mesure (AL, ACD) amplifiée. SRK/T et Hoffer Q y échouent de façon imprévisible.</td></tr>
+            <tr><td>Top formules</td><td><strong>Kane · Cooke K6 · PEARL-DGS · Hoffer QST</strong></td></tr>
+            <tr><td>Pratique</td><td>Cibler une légère myopie. Croiser ≥ 3 formules. Optimiser ses constantes.</td></tr>
+            <tr><td>À éviter</td><td>SRK/T, Hoffer Q seule, Holladay 1.</td></tr>
+          </table>
+        </div>
+      </td>
+      <td>
+        <div class="case-head">Œil long (AL &gt; 25 mm) <span class="case-tag">Myope fort</span></div>
+        <div class="case-body">
+          <table>
+            <tr><td>Pourquoi</td><td>SRK/T surestime la puissance → hypermétropisation classique du myope fort.</td></tr>
+            <tr><td>Top formules</td><td><strong>Kane · Barrett Universal II · PEARL-DGS · Hill-RBF 3.0</strong></td></tr>
+            <tr><td>Pratique</td><td>Si AL &gt; 28 mm : croiser + Wang-Koch éventuel. Vérifier la dispo des IOL ≤ 0 D.</td></tr>
+            <tr><td>À éviter</td><td>SRK/T sans correction Wang-Koch.</td></tr>
+          </table>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <div class="case-head">Post-LASIK myopique <span class="case-tag">Module dédié</span></div>
+        <div class="case-body">
+          <table>
+            <tr><td>Pourquoi</td><td>Rapport cornée ant./post. modifié → K surestimée → IOL sous-corrigeant → hypermétropie résiduelle.</td></tr>
+            <tr><td>Top formules</td><td><strong>Barrett True-K (TK) · EVO 2.0 (PK) · PEARL-DGS (PK)</strong></td></tr>
+            <tr><td>Pratique</td><td>Module post-réfractif ESCRS. TK (IOLMaster 700) si dispo. Sinon True-K No-History.</td></tr>
+            <tr><td>Astuce</td><td>Ne jamais substituer TK à K standard dans un calculateur hors module dédié.</td></tr>
+          </table>
+        </div>
+      </td>
+      <td>
+        <div class="case-head">Kératocône <span class="case-tag">Très difficile</span></div>
+        <div class="case-body">
+          <table>
+            <tr><td>Pourquoi</td><td>Asymétrie cornéenne, ELP imprévisible, K élevée → hypothèses des formules tombent.</td></tr>
+            <tr><td>Top formules</td><td><strong>Barrett True-K KCN (TK) · Kane KCN</strong></td></tr>
+            <tr><td>Précision</td><td>K max &lt; 50 D : ~70 % à ±0,5 D. K max ≥ 50 D : &lt; 20 % à ±0,5 D.</td></tr>
+            <tr><td>Pratique</td><td>Viser une légère myopie. Info patient tracée. Discuter monofocal.</td></tr>
+          </table>
+        </div>
+      </td>
+    </tr>
+  </table>
+
+  <div class="footer-refs">
+    <strong>Références :</strong> Tonk et al. <em>Am J Ophthalmol</em> 2023 (kératocône) · Koch et al. <em>JCRS</em> (post-LASIK) · Kane <em>BMJ Open Ophth</em> (yeux extrêmes) · Voytsekhivskyy <em>Eye</em> 2022 (yeux courts).
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- PAGE 5 — VS FORMULES CLASSIQUES                               -->
+<!-- ============================================================ -->
+<div class="page">
+  <div class="page-header">
+    <table class="page-header-table"><tr>
+      <td>
+        <div class="section-kicker">Comparaison</div>
+        <h1 class="section-title">Nouvelles formules vs SRK/T, Hoffer Q, Holladay…</h1>
+      </td>
+      <td><span class="page-num">04</span></td>
+    </tr></table>
+  </div>
+
+  <div class="tldr">
+    <div class="tldr-label">CE QU'IL FAUT RETENIR</div>
+    <p>Les formules de 4ᵉ et 5ᵉ génération (incluses dans l'ESCRS) <strong>surclassent statistiquement</strong> les formules classiques. Le bénéfice est <strong>modeste en œil normal</strong> (gains de 0,05–0,15 D en MAE) mais <strong>cliniquement majeur aux extrêmes</strong> de longueur axiale, en post-réfractif et en kératocône.</p>
+  </div>
+
+  <h2>Précision réfractive comparée — Erreur Absolue Moyenne (MAE) typique</h2>
+
+  <div class="scale-wrap">
+    <div class="scale-caption">Échelle inversée : plus la barre est courte, meilleure est la formule</div>
+    <table class="scale-table">
+      <tr><td><span class="scale-name">Kane <small>5ᵉ gen · IA + optique</small></span></td><td><div class="scale-bar-outer"><div class="scale-fill" style="width: 37%;">0,37 D</div></div></td></tr>
+      <tr><td><span class="scale-name">EVO 2.0 <small>thick lens + IA</small></span></td><td><div class="scale-bar-outer"><div class="scale-fill" style="width: 37%;">0,37 D</div></div></td></tr>
+      <tr><td><span class="scale-name">Barrett Universal II <small>optique théorique</small></span></td><td><div class="scale-bar-outer"><div class="scale-fill" style="width: 38%;">0,38 D</div></div></td></tr>
+      <tr><td><span class="scale-name">PEARL-DGS <small>thick lens + ML</small></span></td><td><div class="scale-bar-outer"><div class="scale-fill" style="width: 38%;">0,38 D</div></div></td></tr>
+      <tr><td><span class="scale-name">Cooke K6 <small>thin lens moderne</small></span></td><td><div class="scale-bar-outer"><div class="scale-fill" style="width: 39%;">0,39 D</div></div></td></tr>
+      <tr><td><span class="scale-name">Hoffer QST <small>Hoffer Q + IA</small></span></td><td><div class="scale-bar-outer"><div class="scale-fill" style="width: 40%;">0,40 D</div></div></td></tr>
+      <tr><td><span class="scale-name">Hill-RBF 3.0 <small>IA pure</small></span></td><td><div class="scale-bar-outer"><div class="scale-fill" style="width: 40%;">0,40 D</div></div></td></tr>
+      <tr class="scale-sep"><td></td><td></td></tr>
+      <tr><td><span class="scale-name">SRK/T <small>3ᵉ gen · 1990</small></span></td><td><div class="scale-bar-outer"><div class="scale-fill old" style="width: 52%;">~0,52 D</div></div></td></tr>
+      <tr><td><span class="scale-name">Hoffer Q <small>3ᵉ gen · 1993</small></span></td><td><div class="scale-bar-outer"><div class="scale-fill old" style="width: 54%;">~0,54 D</div></div></td></tr>
+      <tr><td><span class="scale-name">Holladay 1 <small>3ᵉ gen · 1988</small></span></td><td><div class="scale-bar-outer"><div class="scale-fill old" style="width: 55%;">~0,55 D</div></div></td></tr>
+    </table>
+    <div style="font-size: 7pt; color: var(--muted); margin-top: 2.5mm; font-style: italic;">
+      Valeurs indicatives en œil normal (étude Lwowski/Kohnen 2025 pour les nouvelles formules, méta-revues pour les anciennes). En œil extrême, les écarts se creusent encore davantage en faveur des nouvelles formules.
+    </div>
+  </div>
+
+  <h2>Tableau comparatif synthétique</h2>
+
+  <table class="data">
+    <thead>
+      <tr>
+        <th style="width: 24%;">Critère</th>
+        <th class="center">Anciennes <span style="font-weight:400; text-transform:none; font-size:7.5pt;">(SRK/T, Hoffer Q, Holladay 1)</span></th>
+        <th class="center">Nouvelles <span style="font-weight:400; text-transform:none; font-size:7.5pt;">(ESCRS : Kane, Barrett, EVO…)</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Génération</strong></td>
+        <td class="center">3ᵉ génération (1988–1993)</td>
+        <td class="center">4ᵉ et 5ᵉ générations (2017–2024)</td>
+      </tr>
+      <tr>
+        <td><strong>Méthode</strong></td>
+        <td class="center">Optique théorique simple, régression</td>
+        <td class="center">IA / ML, thick lens, pattern recognition</td>
+      </tr>
+      <tr>
+        <td><strong>Variables utilisées</strong></td>
+        <td class="center">AL · K · (ACD pour Hoffer Q)</td>
+        <td class="center">AL · K · ACD · LT · CCT · WTW · âge · genre</td>
+      </tr>
+      <tr>
+        <td><strong>Œil normal</strong></td>
+        <td class="center"><span class="pill warn">Acceptable</span></td>
+        <td class="center"><span class="pill good">Excellent</span></td>
+      </tr>
+      <tr>
+        <td><strong>Œil court / œil long</strong></td>
+        <td class="center"><span class="pill bad">Imprécis</span></td>
+        <td class="center"><span class="pill good">Précis</span></td>
+      </tr>
+      <tr>
+        <td><strong>Post-LASIK</strong></td>
+        <td class="center"><span class="pill bad">Non recommandé</span></td>
+        <td class="center"><span class="pill good">Modules dédiés (True-K…)</span></td>
+      </tr>
+      <tr>
+        <td><strong>Kératocône</strong></td>
+        <td class="center"><span class="pill bad">Non recommandé</span></td>
+        <td class="center"><span class="pill warn">Formules KCN spécifiques</span></td>
+      </tr>
+      <tr>
+        <td><strong>Disponibilité ESCRS</strong></td>
+        <td class="center"><span class="check-no">✗</span> Absentes</td>
+        <td class="center"><span class="check-yes">✓</span> Toutes intégrées</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout warn">
+    <strong>Pièges encore fréquents en 2026</strong>
+    Les biomètres affichent souvent <em>par défaut</em> SRK/T, Hoffer Q, Holladay 1 et Haigis. Ne pas se limiter à ce qui sort de la machine : le calculateur ESCRS donne accès aux formules modernes en quelques clics. Pour un cas standard, vérifier la concordance entre la formule du biomètre et ≥ 2 formules ESCRS.
+  </div>
+
+  <div class="footer-refs">
+    <strong>Références principales :</strong> Lwowski C, Kohnen T <em>JCRS</em> 2025 · Melles RB, Holladay JT <em>Ophthalmology</em> 2018 · Kane JX <em>BMJ Open Ophth</em>.
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- PAGE 6 — LES 7 FORMULES                                       -->
+<!-- ============================================================ -->
+<div class="page">
+  <div class="page-header">
+    <table class="page-header-table"><tr>
+      <td>
+        <div class="section-kicker">Fiches synthétiques</div>
+        <h1 class="section-title">Les 7 formules de l'ESCRS</h1>
+      </td>
+      <td><span class="page-num">05</span></td>
+    </tr></table>
+  </div>
+
+  <p style="margin-bottom: 3mm; font-size: 8.8pt;">Comprendre brièvement la nature de chaque formule aide à choisir laquelle privilégier en cas de discordance. Toutes accessibles en un clic dans le calculateur ESCRS.</p>
+
+  <table class="formulas-table">
+    <tr>
+      <td>
+        <div class="fc-head">
+          <span class="fc-name">Barrett Universal II</span>
+          <span class="fc-type">Optique théorique</span>
+        </div>
+        <div class="fc-desc">Formule de référence depuis ~2013, modèle optique paraxial avec calcul du facteur lentille. Standard <em>de facto</em> de nombreux biomètres (IOLMaster, Lenstar).</div>
+        <table class="fc-meta-table"><tr>
+          <td><span class="fc-meta-label">Versions</span><span class="fc-meta-val">True-K, True-K KCN, Toric</span></td>
+          <td><span class="fc-meta-label">Force</span><span class="fc-meta-val">Polyvalente, validée sur de grandes cohortes</span></td>
+        </tr></table>
+      </td>
+      <td>
+        <div class="fc-head">
+          <span class="fc-name">Kane</span>
+          <span class="fc-type">IA + Optique théorique</span>
+        </div>
+        <div class="fc-desc">Formule hybride combinant optique théorique et IA (régression sur grandes bases). Souvent classée n°1 dans les méta-comparaisons récentes, notamment aux extrêmes d'AL.</div>
+        <table class="fc-meta-table"><tr>
+          <td><span class="fc-meta-label">Versions</span><span class="fc-meta-val">Kane KCN, Toric, post-réfractif</span></td>
+          <td><span class="fc-meta-label">Force</span><span class="fc-meta-val">Yeux courts et longs, robustesse globale</span></td>
+        </tr></table>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <div class="fc-head">
+          <span class="fc-name">EVO 2.0</span>
+          <span class="fc-type">Thick lens · théorie d'emmétropisation</span>
+        </div>
+        <div class="fc-desc">"Emmetropia Verifying Optical", basée sur la théorie de l'emmétropisation. Modèle de cornée épais. Intègre la kératométrie postérieure (PK) si disponible.</div>
+        <table class="fc-meta-table"><tr>
+          <td><span class="fc-meta-label">Versions</span><span class="fc-meta-val">EVO post-LASIK (PK), EVO Toric</span></td>
+          <td><span class="fc-meta-label">Force</span><span class="fc-meta-val">Post-réfractif, cornées atypiques</span></td>
+        </tr></table>
+      </td>
+      <td>
+        <div class="fc-head">
+          <span class="fc-name">Hoffer QST</span>
+          <span class="fc-type">Hoffer Q + IA (Savini–Taroni)</span>
+        </div>
+        <div class="fc-desc">Évolution de la classique Hoffer Q, "boostée" par IA. Conserve la robustesse du modèle d'origine en y ajoutant un ajustement appris sur de larges bases de données.</div>
+        <table class="fc-meta-table"><tr>
+          <td><span class="fc-meta-label">Versions</span><span class="fc-meta-val">Post-LASIK, Toric, optimisation</span></td>
+          <td><span class="fc-meta-label">Force</span><span class="fc-meta-val">Continuité avec Hoffer Q</span></td>
+        </tr></table>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <div class="fc-head">
+          <span class="fc-name">PEARL-DGS</span>
+          <span class="fc-type">Thick lens + machine learning</span>
+        </div>
+        <div class="fc-desc">Approche moderne combinant équations de lentille épaisse et modèles de ML prédisant l'ELP. Très performante sur l'indicateur composite FPI (Formula Performance Index).</div>
+        <table class="fc-meta-table"><tr>
+          <td><span class="fc-meta-label">Versions</span><span class="fc-meta-val">Post-réfractif (PK), Toric</span></td>
+          <td><span class="fc-meta-label">Force</span><span class="fc-meta-val">Stabilité sur toute la plage d'AL</span></td>
+        </tr></table>
+      </td>
+      <td>
+        <div class="fc-head">
+          <span class="fc-name">Cooke K6</span>
+          <span class="fc-type">Thin lens moderne</span>
+        </div>
+        <div class="fc-desc">Formule à lentille fine de David Cooke. 6 variables (AL, K, ACD, LT, CCT, sexe). Excellente performance dans plusieurs études récentes (FPI &gt; 0,70 sur cohorte coréenne).</div>
+        <table class="fc-meta-table"><tr>
+          <td><span class="fc-meta-label">Versions</span><span class="fc-meta-val">K6 + TK (post-LASIK), Toric</span></td>
+          <td><span class="fc-meta-label">Force</span><span class="fc-meta-val">Yeux courts, prédictions stables</span></td>
+        </tr></table>
+      </td>
+    </tr>
+    <tr>
+      <td colspan="2" style="width: 100%;">
+        <div class="fc-head">
+          <span class="fc-name">Hill-RBF 3.0</span>
+          <span class="fc-type">IA pure · Radial Basis Function</span>
+        </div>
+        <div class="fc-desc">Formule purement basée sur l'IA (réseau à fonctions de base radiales). Entraînée sur des dizaines de milliers de cas, elle ne repose pas sur un modèle optique théorique. La version 3.0 élargit le domaine de validité et améliore les yeux longs.</div>
+        <table class="fc-meta-table" style="display: table;"><tr>
+          <td style="width: 33%;"><span class="fc-meta-label">Versions</span><span class="fc-meta-val">Toric Hill-RBF</span></td>
+          <td style="width: 33%;"><span class="fc-meta-label">Force</span><span class="fc-meta-val">Œil normal et long</span></td>
+          <td style="width: 33%;"><span class="fc-meta-label">Limite</span><span class="fc-meta-val">Yeux extrêmes courts, hors domaine d'entraînement</span></td>
+        </tr></table>
+      </td>
+    </tr>
+  </table>
+
+  <div class="footer-refs">
+    <strong>Note méthodologique :</strong> Le classement varie selon les études (population, biomètre, IOL utilisée). En pratique, croiser ≥ 2 formules de familles différentes (optique théorique + IA) renforce la fiabilité de la décision.
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- PAGE 7 — UTILISATION PRATIQUE + CHECKLIST                     -->
+<!-- ============================================================ -->
+
+
+</body>
+</html>

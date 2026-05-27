@@ -24,5 +24,7 @@ contextBridge.exposeInMainWorld('escrsAPI', {
   /** Déclenche manuellement l'export PDF de la fenêtre ESCRS. */
   savePDF: () =>
     ipcRenderer.invoke('save-pdf'),
+  /** Ouvre le guide d'utilisation dans le navigateur par défaut. */
+  ouvrirGuide: () => ipcRenderer.invoke('ouvrir-guide'),
 
 });

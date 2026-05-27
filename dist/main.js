@@ -64,13 +64,13 @@ function createMainWindow() {
 // 2. FENÊTRE ESCRS + EXPORT PDF
 async function _savePDF(win) {
     const parentWin = win.isDestroyed() ? (mainWindow ?? undefined) : win;
-    // ✅ CORRECTION : ne pas destructurer directement, utiliser result
-    const result = await electron_1.dialog.showSaveDialog(parentWin, {
+    const saveResult = await electron_1.dialog.showSaveDialog(parentWin, {
         title: 'Enregistrer les résultats ESCRS',
         defaultPath: `ESCRS_${new Date().toISOString().slice(0, 10)}.pdf`,
         filters: [{ name: 'PDF', extensions: ['pdf'] }],
     });
-    if (result.canceled || !result.filePath)
+    const filePath = saveResult.filePath;
+    if (saveResult.canceled || !filePath)
         return;
     try {
         const data = await win.webContents.printToPDF({
@@ -81,8 +81,8 @@ async function _savePDF(win) {
                 marginType: 'printableArea',
             },
         });
-        fs.writeFileSync(result.filePath, data);
-        console.log(`  ✓ PDF enregistré : ${result.filePath}`);
+        fs.writeFileSync(filePath, data);
+        console.log(`  ✓ PDF enregistré : ${filePath}`);
     }
     catch (err) {
         console.error('Erreur export PDF :', err);
@@ -217,6 +217,10 @@ electron_1.ipcMain.handle('get-active-patient', async () => {
         return { success: false, patient: { code: null }, error: String(err) };
     }
 });
+electron_1.ipcMain.handle('ouvrir-guide', () => {
+    const guidePath = path.join(__dirname, '..', 'src', 'renderer', 'guide_escrs.html');
+    electron_1.shell.openPath(guidePath);
+});
 /** Calcul ESCRS principal — inchangé. */
 electron_1.ipcMain.handle('calculer-escrs', async (_event, params) => {
     try {
@@ -275,6 +279,10 @@ electron_1.app.whenReady().then(() => {
     escrsSession.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 ' +
         '(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36');
     createMainWindow();
+});
+electron_1.app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin')
+        electron_1.app.quit();
 });
 electron_1.app.on('activate', () => {
     if (!mainWindow)

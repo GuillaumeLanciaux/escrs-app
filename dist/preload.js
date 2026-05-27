@@ -18,4 +18,6 @@ electron_1.contextBridge.exposeInMainWorld('escrsAPI', {
     getActivePatient: () => electron_1.ipcRenderer.invoke('get-active-patient'),
     /** Déclenche manuellement l'export PDF de la fenêtre ESCRS. */
     savePDF: () => electron_1.ipcRenderer.invoke('save-pdf'),
+    /** Ouvre le guide d'utilisation dans le navigateur par défaut. */
+    ouvrirGuide: () => electron_1.ipcRenderer.invoke('ouvrir-guide'),
 });

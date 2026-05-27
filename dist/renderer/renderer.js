@@ -60,6 +60,12 @@ btnAutoDetect.addEventListener('click', async () => {
         btnAutoDetect.disabled = false;
     }
 });
+// Ouvrir le guide dans le navigateur par défaut
+document.getElementById('btn-guide')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    const api = window.escrsAPI;
+    api.ouvrirGuide();
+});
 // ── Bouton calculer ────────────────────────────────────────────────────────
 btn.addEventListener('click', async () => {
     const patientCode = getVal('patient_code');

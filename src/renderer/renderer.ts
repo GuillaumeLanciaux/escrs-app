@@ -20,6 +20,7 @@ interface EscrsAPI {
     error?:  string;
   }>;
   savePDF: () => Promise<{ success: boolean; error?: string }>;
+   ouvrirGuide: () => Promise<void>;
 }
 
 interface Window {
@@ -92,6 +93,13 @@ btnAutoDetect.addEventListener('click', async () => {
   } finally {
     btnAutoDetect.disabled = false;
   }
+});
+
+// Ouvrir le guide dans le navigateur par défaut
+document.getElementById('btn-guide')?.addEventListener('click', (e) => {
+  e.preventDefault();
+  const api = (window as Window & typeof globalThis).escrsAPI;
+  api.ouvrirGuide();
 });
 
 // ── Bouton calculer ────────────────────────────────────────────────────────
