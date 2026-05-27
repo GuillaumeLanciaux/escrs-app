@@ -40,7 +40,6 @@
 
     .grid   { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
-    .full   { grid-column: 1 / -1; }
 
     label {
       display: flex;
@@ -66,42 +65,70 @@
       box-shadow: 0 0 0 3px rgba(66,153,225,0.15);
     }
 
-    /* ── Ligne patient : champ + bouton auto-detect + label nom ── */
-    .patient-row {
-      display: flex;
-      align-items: flex-end;
-      gap: 8px;
+    /* ── Carte patient détecté ── */
+    #patient-card {
+      display: none;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: #ebf8ff;
+      border: 1px solid #bee3f8;
+      border-radius: 8px;
+      margin-bottom: 4px;
     }
 
-    .patient-row label {
+    #patient-card.visible { display: flex; }
+
+    #patient-card .patient-icon {
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+
+    #patient-card .patient-info {
       flex: 1;
     }
 
+    #patient-card .patient-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: #2b6cb0;
+    }
+
+    #patient-card .patient-code {
+      font-size: 12px;
+      color: #4a5568;
+      margin-top: 2px;
+    }
+
+    #patient-card .patient-clear {
+      font-size: 18px;
+      color: #a0aec0;
+      cursor: pointer;
+      padding: 4px;
+      line-height: 1;
+      border: none;
+      background: none;
+    }
+
+    #patient-card .patient-clear:hover { color: #e53e3e; }
+
+    /* ── Bouton auto-detect ── */
     #btn-auto-detect {
-      flex-shrink: 0;
-      height: 34px;
-      padding: 0 12px;
+      width: 100%;
+      padding: 10px;
       background: #edf2f7;
       border: 1px solid #cbd5e0;
       border-radius: 6px;
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 600;
       color: #4a5568;
       cursor: pointer;
-      white-space: nowrap;
       transition: background 0.15s, border-color 0.15s;
+      text-align: center;
     }
 
     #btn-auto-detect:hover    { background: #e2e8f0; border-color: #a0aec0; }
     #btn-auto-detect:disabled { background: #edf2f7; color: #a0aec0; cursor: not-allowed; }
-
-    #patient-label {
-      font-size: 13px;
-      font-weight: 500;
-      color: #2b6cb0;
-      white-space: nowrap;
-      display: none;
-    }
 
     /* Mode tabs */
     .tabs {
@@ -161,11 +188,57 @@
     #status.info    { background: #ebf8ff; color: #2b6cb0; border: 1px solid #bee3f8; display: block; }
     #status.success { background: #f0fff4; color: #276749; border: 1px solid #9ae6b4; display: block; }
     #status.error   { background: #fff5f5; color: #c53030; border: 1px solid #feb2b2; display: block; }
+
+    /* Lien guide */
+    .footer {
+      margin-top: 12px;
+      text-align: center;
+    }
+
+    #btn-guide {
+      font-size: 12px;
+      color: #718096;
+      text-decoration: none;
+      border-bottom: 1px dashed #cbd5e0;
+      cursor: pointer;
+      background: none;
+      border-top: none;
+      border-left: none;
+      border-right: none;
+      padding: 0;
+    }
+
+    #btn-guide:hover { color: #4a5568; }
   </style>
 </head>
 <body class="mode-normal">
 
   <h1>Calculateur IOL ESCRS</h1>
+
+  <!-- Patient -->
+  <div class="section">
+    <div class="section-title">Patient</div>
+
+    <!-- Carte patient détecté -->
+    <div id="patient-card">
+      <span class="patient-icon">👤</span>
+      <div class="patient-info">
+        <div class="patient-name" id="patient-name">—</div>
+        <div class="patient-code" id="patient-code-display">Code : —</div>
+      </div>
+      <button class="patient-clear" id="btn-clear-patient" title="Effacer">✕</button>
+    </div>
+
+    <!-- Bouton auto-detect -->
+    <button id="btn-auto-detect">⟳ Détecter le patient actif dans Studio Vision</button>
+
+    <!-- Champ chirurgien -->
+    <div style="margin-top: 12px;">
+      <label>Chirurgien
+        <input id="surgeon" type="text" placeholder="Dr Megret" value="Dr Megret">
+      </label>
+    </div>
+  </div>
 
   <!-- Mode -->
   <div class="section">
@@ -178,8 +251,7 @@
 
     <!-- Post LASIK type -->
     <div class="lasik-only">
-      <label>
-        Type d'intervention
+      <label>Type d'intervention
         <select id="postLasikType">
           <option value="Myopic">Myopique</option>
           <option value="Hyperopic">Hypermétropique</option>
@@ -188,42 +260,15 @@
     </div>
   </div>
 
-  <!-- Patient -->
-  <div class="section">
-    <div class="section-title">Patient</div>
-    <div class="grid">
-
-      <!-- Code patient + bouton auto-detect sur la même ligne -->
-      <div class="patient-row">
-        <label>Code patient
-          <input id="patient_code" type="text" placeholder="66844742">
-        </label>
-        <button id="btn-auto-detect" title="Lire le patient actif dans Access">
-          ⟳ Auto
-        </button>
-      </div>
-
-      <label>Chirurgien
-        <input id="surgeon" type="text" placeholder="Dr Megret" value="Dr Megret">
-      </label>
-
-    </div>
-
-    <!-- Nom affiché après détection automatique -->
-    <div style="margin-top: 8px; min-height: 18px;">
-      <span id="patient-label"></span>
-    </div>
-  </div>
-
   <!-- IOL -->
   <div class="section">
     <div class="section-title">Implant</div>
     <div class="grid">
       <label>Fabricant
-        <input id="manufacturer" type="text" placeholder="Alcon">
+        <input id="manufacturer" type="text" placeholder="BVI" value="BVI">
       </label>
       <label>Modèle IOL
-        <input id="iol" type="text" placeholder="AcrySof SN60WF">
+        <input id="iol" type="text" placeholder="MICROPURE 123" value="MICROPURE 123">
       </label>
       <label>Indice de réfraction
         <select id="index">
@@ -248,19 +293,15 @@
     </div>
   </div>
 
-  <!-- Bouton -->
+  <!-- Bouton calculer -->
   <button id="btn-calculer">Calculer sur ESCRS →</button>
   <div id="status"></div>
 
-    <!-- Lien guide -->
-  <div style="margin-top: 12px; text-align: center;">
-    <a id="btn-guide" href="#" style="
-      font-size: 12px;
-      color: #718096;
-      text-decoration: none;
-      border-bottom: 1px dashed #cbd5e0;
-    "> Guide d'utilisation ESCRS</a>
+  <!-- Guide -->
+  <div class="footer">
+    <button id="btn-guide">Guide ESCRS</button>
   </div>
+
   <script src="../../dist/renderer/renderer.js" type="text/javascript"></script>
 </body>
 </html>
