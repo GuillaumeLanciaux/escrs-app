@@ -2,8 +2,10 @@
 /**
  * renderer.ts — Logique de l'interface médecin
  */
-// ── Mode tabs ──────────────────────────────────────────────────────────────
+// ── État global ────────────────────────────────────────────────────────────
 let currentMode = 'normal';
+let currentPatientCode = ''; // remplace getVal('patient_code')
+// ── Mode tabs ──────────────────────────────────────────────────────────────
 document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -15,7 +17,10 @@ document.querySelectorAll('.tab').forEach(tab => {
 // ── Helpers ────────────────────────────────────────────────────────────────
 const btn = document.getElementById('btn-calculer');
 const btnAutoDetect = document.getElementById('btn-auto-detect');
-const patientLabel = document.getElementById('patient-label');
+const btnClear = document.getElementById('btn-clear-patient');
+const patientCard = document.getElementById('patient-card');
+const patientName = document.getElementById('patient-name');
+const patientCodeDisplay = document.getElementById('patient-code-display');
 const statusDiv = document.getElementById('status');
 function setStatus(msg, type) {
     statusDiv.textContent = msg;
@@ -28,29 +33,36 @@ function getNum(id) {
     const v = parseFloat(getVal(id));
     return isNaN(v) ? null : v;
 }
-function setPatientDisplay(patient) {
-    const codeInput = document.getElementById('patient_code');
-    if (patient.code) {
-        codeInput.value = patient.code;
-        const name = [patient.prenom, patient.nom].filter(Boolean).join(' ');
-        patientLabel.textContent = name ? `— ${name}` : '';
-        patientLabel.style.display = name ? 'inline' : 'none';
-    }
+function afficherPatient(patient) {
+    if (!patient.code)
+        return;
+    currentPatientCode = patient.code;
+    const name = [patient.prenom, patient.nom].filter(Boolean).join(' ');
+    patientName.textContent = name || `Patient ${patient.code}`;
+    patientCodeDisplay.textContent = `Code : ${patient.code}`;
+    patientCard.classList.add('visible');
+}
+function effacerPatient() {
+    currentPatientCode = '';
+    patientCard.classList.remove('visible');
+    patientName.textContent = '—';
+    patientCodeDisplay.textContent = 'Code : —';
 }
 // ── Détection automatique ─────────────────────────────────────────────────
 btnAutoDetect.addEventListener('click', async () => {
     btnAutoDetect.disabled = true;
+    btnAutoDetect.textContent = '⟳ Détection…';
     setStatus('⏳ Lecture du patient actif dans Access…', 'info');
     try {
         const api = window.escrsAPI;
         const result = await api.getActivePatient();
         if (result.success && result.patient.code) {
-            setPatientDisplay(result.patient);
+            afficherPatient(result.patient);
             const name = [result.patient.prenom, result.patient.nom].filter(Boolean).join(' ');
             setStatus(`✓ Patient détecté : ${name} (${result.patient.code})`, 'success');
         }
         else {
-            setStatus('⚠ Aucun patient ouvert dans Access — saisissez le code manuellement.', 'error');
+            setStatus('⚠ Aucun patient ouvert dans Access.', 'error');
         }
     }
     catch (err) {
@@ -58,9 +70,16 @@ btnAutoDetect.addEventListener('click', async () => {
     }
     finally {
         btnAutoDetect.disabled = false;
+        btnAutoDetect.textContent = '⟳ Détecter le patient actif dans Access';
     }
 });
-// Ouvrir le guide dans le navigateur par défaut
+// ── Effacer patient ────────────────────────────────────────────────────────
+btnClear?.addEventListener('click', () => {
+    effacerPatient();
+    setStatus('', 'info');
+    statusDiv.style.display = 'none';
+});
+// ── Guide ──────────────────────────────────────────────────────────────────
 document.getElementById('btn-guide')?.addEventListener('click', (e) => {
     e.preventDefault();
     const api = window.escrsAPI;
@@ -68,19 +87,25 @@ document.getElementById('btn-guide')?.addEventListener('click', (e) => {
 });
 // ── Bouton calculer ────────────────────────────────────────────────────────
 btn.addEventListener('click', async () => {
-    const patientCode = getVal('patient_code');
-    if (!patientCode) {
-        setStatus('⚠ Veuillez saisir un code patient.', 'error');
+    // Vérifier qu'un patient est détecté
+    if (!currentPatientCode) {
+        setStatus('⚠ Veuillez détecter un patient via le bouton "⟳ Détecter".', 'error');
+        return;
+    }
+    // Vérifier que l'IOL est renseigné
+    const iol = getVal('iol');
+    if (!iol) {
+        setStatus('⚠ Veuillez saisir le modèle IOL.', 'error');
         return;
     }
     btn.disabled = true;
     setStatus('⏳ Chargement des données patient…', 'info');
     // ── Construction des paramètres ──────────────────────────────────────────
     const params = {
-        patient_code: patientCode,
+        patient_code: currentPatientCode,
         surgeon: getVal('surgeon'),
         manufacturer: getVal('manufacturer'),
-        iol: getVal('iol'),
+        iol: iol,
         mode: currentMode,
         index: getVal('index'),
         target_od: getNum('target_od') ?? 0.0,
