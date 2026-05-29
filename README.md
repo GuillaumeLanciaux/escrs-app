@@ -1,6 +1,6 @@
 # ESCRS IOL Calculator — Guide
 
-Application desktop Windows permettant de préremplir automatiquement le calculateur IOL ESCRS à partir des données biométriques patient extraites de la base locale AlmaPro.
+Application desktop Windows permettant de préremplir automatiquement le calculateur IOL ESCRS à partir des données biométriques patient extraites de la base locale StudioVision.
 
 ---
 
@@ -104,7 +104,7 @@ Tesseract est installé automatiquement dans `vendor/tesseract/`. Si le téléch
 ### Flux de travail
 
 ```
-1. Ouvrir le patient dans AlmaPro
+1. Ouvrir le patient dans StudioVsion
          ↓
 2. Lancer ESCRS.bat
          ↓
